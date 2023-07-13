@@ -12,10 +12,10 @@
       <button class="logged-in" onclick="logout()">logout</button>
     </header>
     <main>
+      <div id="game"><pre></pre></div>
       <div id="games">
         <h2>games</h2>
         <button onclick="start()">new game</button>
-        <pre></pre>
       </div>
     </main>
     <footer>
@@ -82,12 +82,27 @@
         await fetch("/game", { method: "POST" });
       };
       fetch("/game").then(async res => {
-        document.querySelector("#games pre").innerText = JSON.stringify(
-          await res.json(),
-          null,
-          2
-        );
+        const games = document.querySelector("#games");
+        const glist = await res.json();
+        const ulli = xs => `<ul>${xs.map(x => `<li>${x}</li>`).join("")}</ul>`;
+        const game = g =>
+          g._black_username
+            ? `<a href="?id=${g.game_id}">${g._white_username} vs. ${g._black_username}</a>`
+            : `<a href="?id=${g.game_id}">${g._white_username} waiting</a>`;
+        for (const x of ["pending", "active", "recent", "personal"]) {
+          games.insertAdjacentHTML("beforeend", `<h3>${x}</h3>`);
+          games.insertAdjacentHTML("beforeend", ulli(glist[x].map(game)));
+        }
       });
+      const game_id = new URLSearchParams(window.location.search).get("id");
+      if (game_id)
+        fetch(`/game/${game_id}`).then(async res => {
+          document.querySelector("#game pre").innerText = JSON.stringify(
+            await res.json(),
+            null,
+            2
+          );
+        });
     </script>
   </body>
 </html>
