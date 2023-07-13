@@ -1,6 +1,10 @@
 // IMPORTS ////////////////////////////////////////////////////////////////////
 
-import { Application, Router } from "https://deno.land/x/oak@v12.1.0/mod.ts";
+import {
+  Application,
+  Router,
+  send,
+} from "https://deno.land/x/oak@v12.1.0/mod.ts";
 
 import pg from "https://deno.land/x/postgresjs@v3.3.4/mod.js";
 
@@ -31,10 +35,11 @@ Deno.addSignalListener(`SIGINT`, async () => {
 const router = new Router();
 
 router.post("/signup", async ctx => {
-  const { email, username, password } = await ctx.request.body().value;
+  const { email, username, password } = await ctx.request.body({ type: "json" })
+    .value;
   const [{ usr_id } = { usr_id: null }] = await sql`
     insert into usr (email, username, password)
-    values (${email}, crypt(${username}, gen_salt('bf')), ${password})
+    values (${email}, ${username}, crypt(${password}, gen_salt('bf')))
     returning *
   `;
   await ctx.cookies.set("usr_id", usr_id);
@@ -42,71 +47,35 @@ router.post("/signup", async ctx => {
 });
 
 router.post("/login", async ctx => {
-  const { username, password } = await ctx.request.body().value;
+  const { username, password } = await ctx.request.body({ type: "json" }).value;
   const [{ usr_id } = { usr_id: null }] = await sql`
     select usr_id from usr 
     where username = ${username} 
       and password = crypt(${password}, password)
   `;
   await ctx.cookies.set("usr_id", usr_id);
-  ctx.response.status = 204;
+  ctx.response.status = usr_id ? 204 : 401;
+});
+
+router.get("/usr", async ctx => {
+  const usr_id = (await ctx.cookies.get("usr_id")) ?? null;
+  const [usr] = await sql`
+    select usr_id, username, email, bio from usr 
+    where usr_id = ${usr_id} 
+  `;
+  ctx.response.body = usr;
+  ctx.response.status = usr ? 200 : 404;
 });
 
 router.get("/game", async ctx => {
   const usr_id = (await ctx.cookies.get("usr_id")) ?? null;
   const [games] = await sql`
-    select null
-    , jsonb_agg
-      ( select game_id
-        , _white_username as white_username
-        , _black_username as black_username
-        , _win_username as win_username
-        , white_usr_id
-        , black_usr_id
-        , points
-        from game 
-        where is_public is true 
-          and (white_usr_id is null or black_usr_id is null)
-        order by created_at desc
-      ) as pending
-    , jsonb_agg
-      ( select game_id
-        , _white_username as white_username
-        , _black_username as black_username
-        , white_usr_id
-        , black_usr_id
-        , points
-        from game 
-        where is_public is true 
-          and white_usr_id is not null 
-          and black_usr_id is not null 
-          and points is null
-          and now() - created_at < interval '1 day'
-        order by created_at desc
-      ) as active
-    , jsonb_agg
-      ( select game_id
-        , _white_username as white_username
-        , _black_username as black_username
-        , white_usr_id
-        , black_usr_id
-        , points
-        from game 
-        where is_public is true and points is not null
-        order by created_at desc
-        limit 100
-      ) as recent
-    , jsonb_agg
-      ( select game_id
-        , _white_username as white_username
-        , _black_username as black_username
-        , white_usr_id
-        , black_usr_id
-        , points
-        from game 
-        where white_usr_id = ${usr_id} or black_usr_id = ${usr_id}
-        order by created_at desc
-      ) as personal
+    select
+      coalesce(jsonb_agg(g.*) filter (where game_id is not null and is_public is true and (white_usr_id is null or black_usr_id is null)),'[]') as pending
+    , coalesce(jsonb_agg(g.*) filter (where game_id is not null and is_public is true and white_usr_id is not null and black_usr_id is not null and points is null and now() - created_at < interval '1 day'),'[]') as active
+    , coalesce(jsonb_agg(g.*) filter (where game_id is not null and is_public is true and points is not null),'[]') as recent
+    , coalesce(jsonb_agg(g.*) filter (where game_id is not null and white_usr_id = ${usr_id} or black_usr_id = ${usr_id}),'[]') as personal
+    from game g
   `;
   ctx.response.body = games;
   ctx.response.status = 200;
@@ -244,6 +213,18 @@ router.post("/game/:game_id", async ctx => {
 
 export const app = new Application();
 
+app.use(async (context, next) => {
+  try {
+    await context.send({
+      // TODO: use dist instead
+      root: `${Deno.cwd()}/src`,
+      index: "index.html",
+    });
+  } catch {
+    await next();
+  }
+});
+
 // TODO: add signature keys for cookies
 
 // TODO: Add rate-limiting.
@@ -251,4 +232,4 @@ export const app = new Application();
 app.use(router.routes());
 app.use(router.allowedMethods());
 
-app.listen({ port: parseInt(Deno.env.get(`PORT`) ?? ``) || 6666 });
+app.listen({ port: parseInt(Deno.env.get(`PORT`) ?? ``) || 8666 });

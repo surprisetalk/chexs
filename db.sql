@@ -4,6 +4,8 @@ create extension if not exists pgcrypto;
 
 create extension if not exists hstore;
 
+create extension if not exists citext;
+
 create domain ntext text check ( value <> '' );
 
 create domain url text check ( value ~ '^https?://[^\s/$.?#].[^\s]*$' );
