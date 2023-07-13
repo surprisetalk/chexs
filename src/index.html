@@ -8,24 +8,8 @@
   <body>
     <header>
       <a href="/">chexs</a>
-      <pre id="usr"></pre>
-      <form
-        id="signup"
-        onsubmit="event.preventDefault() ; signup() ; return false"
-      >
-        <input name="email" type="email" />
-        <input name="username" type="username" />
-        <input name="password" type="password" />
-        <button type="submit">signup</button>
-      </form>
-      <form
-        id="login"
-        onsubmit="event.preventDefault() ; login() ; return false"
-      >
-        <input name="username" type="username" />
-        <input name="password" type="password" />
-        <button type="submit">login</button>
-      </form>
+      <a class="logged-out" href="#signup">signup/login</a>
+      <button class="logged-in" onclick="logout()">logout</button>
     </header>
     <main>
       <div id="games">
@@ -34,7 +18,46 @@
         <pre></pre>
       </div>
     </main>
+    <footer>
+      <div class="logged-out">
+        <pre id="usr"></pre>
+        <form
+          id="signup"
+          onsubmit="event.preventDefault() ; signup() ; return false"
+        >
+          <input name="email" type="email" />
+          <input name="username" type="username" />
+          <input name="password" type="password" />
+          <button type="submit">signup</button>
+        </form>
+        <form
+          id="login"
+          onsubmit="event.preventDefault() ; login() ; return false"
+        >
+          <input name="username" type="username" />
+          <input name="password" type="password" />
+          <button type="submit">login</button>
+        </form>
+      </div>
+    </footer>
     <script>
+      const checkUser = async () => {
+        const res = await fetch("/usr");
+        let usr;
+        try {
+          usr = await res.json();
+        } catch (_) {}
+        document.querySelector("#usr").innerText = JSON.stringify(usr, null, 2);
+        for (const x of document.querySelectorAll(".logged-in"))
+          x.style.display = usr ? "block" : "none";
+        for (const x of document.querySelectorAll(".logged-out"))
+          x.style.display = usr ? "none" : "block";
+      };
+      checkUser();
+      const logout = async () => {
+        await fetch("/logout", { method: "POST" });
+        await checkUser();
+      };
       const login = async () => {
         await fetch("/login", {
           method: "POST",
@@ -43,6 +66,7 @@
             password: document.querySelector("#login [name=password]").value,
           }),
         });
+        await checkUser();
       };
       const signup = async () => {
         await fetch("/signup", {
@@ -59,13 +83,6 @@
       };
       fetch("/game").then(async res => {
         document.querySelector("#games pre").innerText = JSON.stringify(
-          await res.json(),
-          null,
-          2
-        );
-      });
-      fetch("/usr").then(async res => {
-        document.querySelector("#usr").innerText = JSON.stringify(
           await res.json(),
           null,
           2

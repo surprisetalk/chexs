@@ -46,6 +46,11 @@ router.post("/signup", async ctx => {
   ctx.response.status = 204;
 });
 
+router.post("/logout", async ctx => {
+  await ctx.cookies.set("usr_id", null);
+  ctx.response.status = 204;
+});
+
 router.post("/login", async ctx => {
   const { username, password } = await ctx.request.body({ type: "json" }).value;
   const [{ usr_id } = { usr_id: null }] = await sql`
@@ -64,7 +69,7 @@ router.get("/usr", async ctx => {
     where usr_id = ${usr_id} 
   `;
   ctx.response.body = usr;
-  ctx.response.status = usr ? 200 : 404;
+  ctx.response.status = usr ? 200 : 403;
 });
 
 router.get("/game", async ctx => {
