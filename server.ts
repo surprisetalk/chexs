@@ -1,6 +1,6 @@
 // IMPORTS ////////////////////////////////////////////////////////////////////
 
-import { Application, Router } from "https://deno.land/x/oak/mod.ts";
+import { Application, Router } from "https://deno.land/x/oak@v12.1.0/mod.ts";
 
 import pg from "https://deno.land/x/postgresjs@v3.3.4/mod.js";
 
@@ -8,7 +8,7 @@ import pg from "https://deno.land/x/postgresjs@v3.3.4/mod.js";
 
 export const sql = pg(
   Deno.env.get(`DATABASE_URL`)?.replace(/flycast/, "internal") ??
-    `postgres://taylor:password1234@localhost:5432/chexs`,
+    `postgres://chexs:password1234@localhost:5432/chexs`,
   {
     database: "chexs",
     // ssl: false,
@@ -30,16 +30,40 @@ Deno.addSignalListener(`SIGINT`, async () => {
 
 const router = new Router();
 
+router.post("/signup", async ctx => {
+  const { email, username, password } = await ctx.request.body().value;
+  const [{ usr_id } = { usr_id: null }] = await sql`
+    insert into usr (email, username, password)
+    values (${email}, crypt(${username}, gen_salt('bf')), ${password})
+    returning *
+  `;
+  await ctx.cookies.set("usr_id", usr_id);
+  ctx.response.status = 204;
+});
+
+router.post("/login", async ctx => {
+  const { username, password } = await ctx.request.body().value;
+  const [{ usr_id } = { usr_id: null }] = await sql`
+    select usr_id from usr 
+    where username = ${username} 
+      and password = crypt(${password}, password)
+  `;
+  await ctx.cookies.set("usr_id", usr_id);
+  ctx.response.status = 204;
+});
+
 router.get("/game", async ctx => {
-  const usr_id = ctx.state.usr_id ?? null;
+  const usr_id = (await ctx.cookies.get("usr_id")) ?? null;
   const [games] = await sql`
     select null
     , jsonb_agg
       ( select game_id
         , _white_username as white_username
         , _black_username as black_username
-        , white_usr_id as white_usr_id
-        , black_usr_id as black_usr_id
+        , _win_username as win_username
+        , white_usr_id
+        , black_usr_id
+        , points
         from game 
         where is_public is true 
           and (white_usr_id is null or black_usr_id is null)
@@ -49,13 +73,14 @@ router.get("/game", async ctx => {
       ( select game_id
         , _white_username as white_username
         , _black_username as black_username
-        , white_usr_id as white_usr_id
-        , black_usr_id as black_usr_id
+        , white_usr_id
+        , black_usr_id
+        , points
         from game 
         where is_public is true 
           and white_usr_id is not null 
           and black_usr_id is not null 
-          and _is_checkmate is false 
+          and points is null
           and now() - created_at < interval '1 day'
         order by created_at desc
       ) as active
@@ -63,11 +88,11 @@ router.get("/game", async ctx => {
       ( select game_id
         , _white_username as white_username
         , _black_username as black_username
-        , white_usr_id as white_usr_id
-        , black_usr_id as black_usr_id
-        , _is_checkmate as is_checkmate 
+        , white_usr_id
+        , black_usr_id
+        , points
         from game 
-        where is_public is true and _is_checkmate is true
+        where is_public is true and points is not null
         order by created_at desc
         limit 100
       ) as recent
@@ -75,9 +100,9 @@ router.get("/game", async ctx => {
       ( select game_id
         , _white_username as white_username
         , _black_username as black_username
-        , white_usr_id as white_usr_id
-        , black_usr_id as black_usr_id
-        , _is_checkmate as is_checkmate 
+        , white_usr_id
+        , black_usr_id
+        , points
         from game 
         where white_usr_id = ${usr_id} or black_usr_id = ${usr_id}
         order by created_at desc
@@ -88,9 +113,9 @@ router.get("/game", async ctx => {
 });
 
 router.post("/game", async ctx => {
-  const black = await ctx.request.body().value;
-  const id = (Math.random() + 1).toString(36).substring(7);
-  const ____ = undefined;
+  const usr_id = (await ctx.cookies.get("usr_id")) ?? null;
+  const id = (Math.random() + 1).toString(36).substring(4);
+  const ____ = 0;
   const board = [
     //////////////////////////////////////////////////////////////////
     [____, ____, ____, ____, ____, null, null, null, null, null, null],
@@ -116,8 +141,11 @@ router.post("/game", async ctx => {
     [null, null, null, null, null, null, ____, ____, ____, ____, ____],
     //////////////////////////////////////////////////////////////////
   ];
-  games[id] = { black, white: null, board, history: [] };
-  lobbies.add(id);
+  await sql`
+    insert into game (game_id, white_usr_id, is_public, _board, _white_username)
+    values (${id}, ${usr_id}, true, ${board}, (select username from usr where usr_id = ${usr_id}))
+    returning *
+  `;
   ctx.response.body = id;
   ctx.response.status = 201;
 });
@@ -136,6 +164,7 @@ router.get("/game/:game_id", async ctx => {
 
 router.post("/game/:game_id", async ctx => {
   const id = ctx.params.game_id;
+  const usr_id = (await ctx.cookies.get("usr_id")) ?? null;
   const {
     color,
     usr_id,

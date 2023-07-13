@@ -23,10 +23,10 @@ create table usr
 
 create table game
 ( game_id text not null primary key
-, white_usr_id bigint references usr (usr_id)
+, white_usr_id bigint not null references usr (usr_id)
 , black_usr_id bigint references usr (usr_id)
+, points real
 , is_public boolean not null
-, _is_checkmate boolean not null
 , _board text[] not null
 , _white_username ntext
 , _black_username ntext
