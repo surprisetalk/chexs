@@ -163,66 +163,81 @@ router.get("/game/:game_id", async ctx => {
 });
 
 router.post("/game/:game_id", async ctx => {
-  const id = ctx.params.game_id;
+  const game_id = ctx.params.game_id;
   const usr_id = (await ctx.cookies.get("usr_id")) ?? null;
   const {
     color,
-    usr_id,
     from,
     to,
   }: {
     color: "black" | "white";
-    usr_id: string;
     from: { q: number; r: number };
     to: { q: number; r: number };
   } = await ctx.request.body().value;
-  const { board, ...game } = { ...games[id] };
-  if (!board) return (ctx.response.status = 404);
-  if (!games[id][color]) games[id][color] = usr_id;
-  lobbies.delete(id);
-  if (game[color] !== usr_id) return (ctx.response.status = 403);
-  if (!board[from.q][from.r]) return (ctx.response.status = 400);
-  if (board[to.q][to.r] === undefined) return (ctx.response.status = 400);
-  // TODO: end game if checkmate or stalemate
-  const q_ = to.q - from.q;
-  const r_ = to.r - from.r;
-  const abs = Math.abs;
-  // TODO: Validate all moves (and captures) by piece.
-  switch (board[from.q][from.r]?.[0]) {
-    case "K":
-      if (abs(q_) > 2 || abs(r_) > 2 || abs(q_ + r_) > 1) {
-        return (ctx.response.status = 400);
+
+  try {
+    await sql.begin(async sql => {
+      await sql`
+        update game set 
+        white_usr_id = coalesce(white_usr_id, ${usr_id})
+          , black_usr_id = coalesce(black_usr_id, ${usr_id})
+        where game = ${game_id}
+      `;
+      const [game] = await sql`
+        select * from game 
+        where game_id = ${game_id}
+        and ${usr_id} = ${sql(`${color}_usr_id`)}
+      `;
+      if (!game) throw new Error("404");
+      if (!game.board[from.q][from.r]) throw new Error("400");
+      if (game.board[to.q][to.r] === undefined) throw new Error("400");
+      // TODO: end game if checkmate or stalemate
+      const q_ = to.q - from.q;
+      const r_ = to.r - from.r;
+      const abs = Math.abs;
+      // TODO: Validate all moves (and captures) by piece.
+      switch (game.board[from.q][from.r]?.[0]) {
+        case "K":
+          if (abs(q_) > 2 || abs(r_) > 2 || abs(q_ + r_) > 1) {
+            return (ctx.response.status = 400);
+          }
+          break;
+        case "Q":
+          throw new Error("TODO");
+          break;
+        case "R":
+          throw new Error("TODO");
+          break;
+        case "N":
+          throw new Error("TODO");
+          break;
+        case "B":
+          if (
+            !(q_ === r_ || 2 * abs(q_) === abs(r_) || 2 * abs(r_) === abs(q_))
+          ) {
+            return (ctx.response.status = 400);
+          }
+          throw new Error("TODO");
+          break;
+        case "P":
+          // TODO: direction based on board[from.q][from.r]?.[1]
+          throw new Error("TODO");
+          break;
+        default:
+          return (ctx.response.status = 400);
       }
-      break;
-    case "Q":
-      throw new Error("TODO");
-      break;
-    case "R":
-      throw new Error("TODO");
-      break;
-    case "N":
-      throw new Error("TODO");
-      break;
-    case "B":
-      if (!(q_ === r_ || 2 * abs(q_) === abs(r_) || 2 * abs(r_) === abs(q_))) {
-        return (ctx.response.status = 400);
-      }
-      throw new Error("TODO");
-      break;
-    case "P":
-      // TODO: direction based on board[from.q][from.r]?.[1]
-      throw new Error("TODO");
-      break;
-    default:
-      return (ctx.response.status = 400);
+
+      // TODO: insert stuff
+
+      // games[id].board[to.q][to.r] = games[id].board[from.q][from.r];
+      // games[id].board[from.q][from.r] = null;
+      // games[id].history.push([ [from.q, from.r], [to.q, to.r] ]);
+    });
+
+    ctx.response.status = 204;
+  } catch (e) {
+    ctx.response.status = parseInt(e) || 500;
   }
-  games[id].board[to.q][to.r] = games[id].board[from.q][from.r];
-  games[id].board[from.q][from.r] = null;
-  games[id].history.push([
-    [from.q, from.r],
-    [to.q, to.r],
-  ]);
-  ctx.response.status = 204;
 });
 
 // APP ////////////////////////////////////////////////////////////////////////
