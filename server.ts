@@ -229,6 +229,8 @@ router.post("/game/:game_id", async ctx => {
 
 export const app = new Application();
 
+// TODO: add signature keys for cookies
+
 // TODO: Add rate-limiting.
 
 app.use(router.routes());
