@@ -79,14 +79,36 @@ router.post("/game/:game_id", async (ctx) => {
   lobbies.delete(id);
   if (game[color] !== usr_id) return ctx.response.status = 403;
   if (!board[from.q][from.r]) return ctx.response.status = 400;
+  if (board[to.q][to.r] === undefined) return ctx.response.status = 400;
+  // TODO: end game if checkmate or stalemate
+  const q_ = to.q - from.q;
+  const r_ = to.r - from.r;
+  const abs = Math.abs;
   // TODO: Validate all moves (and captures) by piece.
   switch (board[from.q][from.r]?.[0]) {
     case "K":
+      if (abs(q_) > 2 || abs(r_) > 2 || abs(q_ + r_) > 1) {
+        return ctx.response.status = 400;
+      }
+      break;
     case "Q":
+      throw new Error("TODO");
+      break;
     case "R":
+      throw new Error("TODO");
+      break;
     case "N":
+      throw new Error("TODO");
+      break;
     case "B":
-    case "P": // TODO: direction based on board[from.q][from.r]?.[1]
+      if (!(q_ === r_ || 2 * abs(q_) === abs(r_) || 2 * abs(r_) === abs(q_))) {
+        return ctx.response.status = 400;
+      }
+      throw new Error("TODO");
+      break;
+    case "P":
+      // TODO: direction based on board[from.q][from.r]?.[1]
+      throw new Error("TODO");
       break;
     default:
       return ctx.response.status = 400;
