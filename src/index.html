@@ -4,6 +4,12 @@
     <title>chexs</title>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+      .logged-in,
+      .logged-out {
+        display: none;
+      }
+    </style>
   </head>
   <body>
     <header>
@@ -15,7 +21,7 @@
       <div id="game"><pre></pre></div>
       <div id="games">
         <h2>games</h2>
-        <button onclick="start()">new game</button>
+        <button onclick="start()" id="new-game">new game</button>
       </div>
     </main>
     <footer>
@@ -47,7 +53,9 @@
         try {
           usr = await res.json();
         } catch (_) {}
-        document.querySelector("#usr").innerText = JSON.stringify(usr, null, 2);
+        document.querySelector("#usr").innerText = usr
+          ? JSON.stringify(usr, null, 2)
+          : "";
         for (const x of document.querySelectorAll(".logged-in"))
           x.style.display = usr ? "block" : "none";
         for (const x of document.querySelectorAll(".logged-out"))
@@ -96,6 +104,7 @@
             ? `<a href="?id=${g.game_id}">${g._white_username} vs. ${g._black_username}</a>`
             : `<a href="?id=${g.game_id}">${g._white_username} waiting</a>`;
         for (const x of ["pending", "active", "recent", "personal"]) {
+          if (!glist[x].length) continue;
           games.insertAdjacentHTML("beforeend", `<h3>${x}</h3>`);
           games.insertAdjacentHTML("beforeend", ulli(glist[x].map(game)));
         }
