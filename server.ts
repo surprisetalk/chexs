@@ -2,29 +2,92 @@
 
 import { Application, Router } from "https://deno.land/x/oak/mod.ts";
 
+import pg from "https://deno.land/x/postgresjs@v3.3.4/mod.js";
+
+// PG /////////////////////////////////////////////////////////////////////////
+
+export const sql = pg(
+  Deno.env.get(`DATABASE_URL`)?.replace(/flycast/, "internal") ??
+    `postgres://taylor:password1234@localhost:5432/chexs`,
+  {
+    database: "chexs",
+    // ssl: false,
+    // fetch_types: false,
+    // idle_timeout: 1,
+    // max_lifetime: 60 * 30,
+    // prepare: false,
+    // username: "postgres",
+    // password: "QL6tRqze46pgR5o",
+  }
+);
+
+Deno.addSignalListener(`SIGINT`, async () => {
+  await sql.end();
+  Deno.exit();
+});
+
 // ROUTES /////////////////////////////////////////////////////////////////////
 
 const router = new Router();
 
-type Coord = [number, number]; // [q,r]
-
-interface Game {
-  white: string | null;
-  black: string | null;
-  board: (string | null | undefined)[][];
-  history: [Coord, Coord][];
-}
-
-const games: Record<string, Game> = {};
-
-const lobbies: Set<string> = new Set();
-
-router.get("/game", (ctx) => {
-  ctx.response.body = Object.keys(games);
+router.get("/game", async ctx => {
+  const usr_id = ctx.state.usr_id ?? null;
+  const [games] = await sql`
+    select null
+    , jsonb_agg
+      ( select game_id
+        , _white_username as white_username
+        , _black_username as black_username
+        , white_usr_id as white_usr_id
+        , black_usr_id as black_usr_id
+        from game 
+        where is_public is true 
+          and (white_usr_id is null or black_usr_id is null)
+        order by created_at desc
+      ) as pending
+    , jsonb_agg
+      ( select game_id
+        , _white_username as white_username
+        , _black_username as black_username
+        , white_usr_id as white_usr_id
+        , black_usr_id as black_usr_id
+        from game 
+        where is_public is true 
+          and white_usr_id is not null 
+          and black_usr_id is not null 
+          and _is_checkmate is false 
+          and now() - created_at < interval '1 day'
+        order by created_at desc
+      ) as active
+    , jsonb_agg
+      ( select game_id
+        , _white_username as white_username
+        , _black_username as black_username
+        , white_usr_id as white_usr_id
+        , black_usr_id as black_usr_id
+        , _is_checkmate as is_checkmate 
+        from game 
+        where is_public is true and _is_checkmate is true
+        order by created_at desc
+        limit 100
+      ) as recent
+    , jsonb_agg
+      ( select game_id
+        , _white_username as white_username
+        , _black_username as black_username
+        , white_usr_id as white_usr_id
+        , black_usr_id as black_usr_id
+        , _is_checkmate as is_checkmate 
+        from game 
+        where white_usr_id = ${usr_id} or black_usr_id = ${usr_id}
+        order by created_at desc
+      ) as personal
+  `;
+  ctx.response.body = games;
   ctx.response.status = 200;
 });
 
-router.post("/game", async (ctx) => {
+router.post("/game", async ctx => {
   const black = await ctx.request.body().value;
   const id = (Math.random() + 1).toString(36).substring(7);
   const ____ = undefined;
@@ -59,27 +122,38 @@ router.post("/game", async (ctx) => {
   ctx.response.status = 201;
 });
 
-router.get("/game/:game_id", (ctx) => {
-  const game = games[ctx.params.game_id];
-  ctx.response.body = { ...game, white: undefined, black: undefined };
+router.get("/game/:game_id", async ctx => {
+  const [game] = await sql`
+    select g.*, jsonb_agg(move.*) as moves
+    from game g
+    left join move m using (game_id)
+    group by g.game_id
+    where game_id = ${ctx.params.game_id}
+  `;
+  ctx.response.body = game;
   ctx.response.status = game ? 200 : 404;
 });
 
-router.post("/game/:game_id", async (ctx) => {
+router.post("/game/:game_id", async ctx => {
   const id = ctx.params.game_id;
-  const { color, usr_id, from, to }: {
+  const {
+    color,
+    usr_id,
+    from,
+    to,
+  }: {
     color: "black" | "white";
     usr_id: string;
     from: { q: number; r: number };
     to: { q: number; r: number };
   } = await ctx.request.body().value;
   const { board, ...game } = { ...games[id] };
-  if (!board) return ctx.response.status = 404;
+  if (!board) return (ctx.response.status = 404);
   if (!games[id][color]) games[id][color] = usr_id;
   lobbies.delete(id);
-  if (game[color] !== usr_id) return ctx.response.status = 403;
-  if (!board[from.q][from.r]) return ctx.response.status = 400;
-  if (board[to.q][to.r] === undefined) return ctx.response.status = 400;
+  if (game[color] !== usr_id) return (ctx.response.status = 403);
+  if (!board[from.q][from.r]) return (ctx.response.status = 400);
+  if (board[to.q][to.r] === undefined) return (ctx.response.status = 400);
   // TODO: end game if checkmate or stalemate
   const q_ = to.q - from.q;
   const r_ = to.r - from.r;
@@ -88,7 +162,7 @@ router.post("/game/:game_id", async (ctx) => {
   switch (board[from.q][from.r]?.[0]) {
     case "K":
       if (abs(q_) > 2 || abs(r_) > 2 || abs(q_ + r_) > 1) {
-        return ctx.response.status = 400;
+        return (ctx.response.status = 400);
       }
       break;
     case "Q":
@@ -102,7 +176,7 @@ router.post("/game/:game_id", async (ctx) => {
       break;
     case "B":
       if (!(q_ === r_ || 2 * abs(q_) === abs(r_) || 2 * abs(r_) === abs(q_))) {
-        return ctx.response.status = 400;
+        return (ctx.response.status = 400);
       }
       throw new Error("TODO");
       break;
@@ -111,11 +185,14 @@ router.post("/game/:game_id", async (ctx) => {
       throw new Error("TODO");
       break;
     default:
-      return ctx.response.status = 400;
+      return (ctx.response.status = 400);
   }
   games[id].board[to.q][to.r] = games[id].board[from.q][from.r];
   games[id].board[from.q][from.r] = null;
-  games[id].history.push([[from.q, from.r], [to.q, to.r]]);
+  games[id].history.push([
+    [from.q, from.r],
+    [to.q, to.r],
+  ]);
   ctx.response.status = 204;
 });
 
