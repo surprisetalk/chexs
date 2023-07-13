@@ -161,6 +161,7 @@ router.get("/game/:game_id", async ctx => {
   ctx.response.status = game ? 200 : 404;
 });
 
+// TODO: resign game by moving your king to XX. or maybe infinity?
 router.post("/game/:game_id", async ctx => {
   const game_id = ctx.params.game_id;
   const usr_id = (await ctx.cookies.get("usr_id")) ?? null;
@@ -172,15 +173,16 @@ router.post("/game/:game_id", async ctx => {
     color: "black" | "white";
     from: { q: number; r: number };
     to: { q: number; r: number };
-  } = await ctx.request.body().value;
-
+  } = await ctx.request.body({ type: "json" }).value;
   try {
     await sql.begin(async sql => {
       await sql`
         update game set 
-        white_usr_id = coalesce(white_usr_id, ${usr_id})
-          , black_usr_id = coalesce(black_usr_id, ${usr_id})
-        where game = ${game_id}
+          white_usr_id = coalesce(white_usr_id, ${usr_id})
+        , black_usr_id = coalesce(black_usr_id, ${usr_id})
+        , _white_username = coalesce(_white_username, (select username from usr where usr_id = ${usr_id}))
+        , _black_username = coalesce(_black_username, (select username from usr where usr_id = ${usr_id}))
+        where game_id = ${game_id}
       `;
       const [game] = await sql`
         select * from game 
@@ -188,6 +190,7 @@ router.post("/game/:game_id", async ctx => {
         and ${usr_id} = ${sql(`${color}_usr_id`)}
       `;
       if (!game) throw new Error("404");
+      if (!from && !to) return;
       if (!game.board[from.q][from.r]) throw new Error("400");
       if (game.board[to.q][to.r] === undefined) throw new Error("400");
       // TODO: end game if checkmate or stalemate
@@ -235,6 +238,7 @@ router.post("/game/:game_id", async ctx => {
 
     ctx.response.status = 204;
   } catch (e) {
+    console.error(e);
     ctx.response.status = parseInt(e) || 500;
   }
 });

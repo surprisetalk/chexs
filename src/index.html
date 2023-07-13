@@ -81,6 +81,12 @@
       const start = async () => {
         await fetch("/game", { method: "POST" });
       };
+      const join = async game_id => {
+        await fetch(`/game/${game_id}`, {
+          method: "POST",
+          body: JSON.stringify({ color: "black" }),
+        });
+      };
       fetch("/game").then(async res => {
         const games = document.querySelector("#games");
         const glist = await res.json();
@@ -95,14 +101,23 @@
         }
       });
       const game_id = new URLSearchParams(window.location.search).get("id");
-      if (game_id)
+      if (game_id) {
         fetch(`/game/${game_id}`).then(async res => {
+          const game = await res.json();
+          if (!game.white_usr_id || !game.black_usr_id)
+            document
+              .querySelector("#game")
+              .insertAdjacentHTML(
+                "afterbegin",
+                `<button onclick="join('${game_id}')">join game</button>`
+              );
           document.querySelector("#game pre").innerText = JSON.stringify(
-            await res.json(),
+            game,
             null,
             2
           );
         });
+      }
     </script>
   </body>
 </html>
