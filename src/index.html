@@ -10,6 +10,41 @@
         display: none;
       }
 
+      #game {
+        display: flex;
+        --s: 35px;
+        --m: 3px;
+        --f: calc(var(--s) * 1.732 + 4 * var(--m) - 1px);
+        --nr: 9;
+        --lw: calc(var(--nr) * (var(--s) + var(--m)));
+      }
+
+      #board {
+        font-size: 0;
+        max-width: var(--lw);
+      }
+
+      .tile {
+        width: var(--s);
+        margin: var(--m);
+        height: calc(var(--s) / 1.1547);
+        display: inline-block;
+        font-size: initial;
+        background-color: #666;
+        clip-path: polygon(
+          25% 0%,
+          75% 0%,
+          100% 50%,
+          75% 100%,
+          25% 100%,
+          0% 50%
+        );
+        /* margin-bottom: calc(var(--m) - var(--s) * 0.2885); */
+      }
+      .tile:nth-child(odd) {
+        background: #aaa;
+      }
+
       /*
       #board::before {
         content: "";
@@ -21,80 +56,7 @@
           #000 0 var(--f)
         );
       }
-
-      #board::before {
-        width: clamp(
-          0px,
-          (var(--lw) - 100%) * 1000,
-          calc(var(--s) / 2 + var(--mh))
-        );
-      }
-
-      #board i::before,
-      #board i::after {
-        width: clamp(
-          0px,
-          (100% - var(--lw) + 1px) * 1000,
-          calc(50% - var(--s) / 2)
-        );
-      }
       */
-
-      /* TODO: get rid of this */
-      /*
-      #game {
-        display: flex;
-        --s: 25px;
-        --r: 1;
-
-        --h: 0.25;
-        --v: 0.35;
-        --hc: calc(clamp(0, var(--h), 0.5) * var(--s));
-        --vc: calc(clamp(0, var(--v), 0.5) * var(--s) * var(--r));
-
-        --mv: 4px;
-        --mh: calc(var(--mv) + (var(--s) - 2 * var(--hc)) / 2);
-        --f: calc(
-          2 * var(--s) * var(--r) + 4 * var(--mv) - 2 * var(--vc) - 2px
-        );
-        --nr: 5;
-      }
-      */
-
-      #game {
-        display: flex;
-        --s: 35px;
-        --m: 3px;
-        --f: calc(var(--s) * 1.732 + 4 * var(--m) - 1px);
-        --nr: 9;
-        --lw: calc(var(--nr) * (var(--s) + var(--m)));
-      }
-
-      #board {
-        font-size: 0; /*disable white space between inline block element */
-        max-width: var(--lw);
-      }
-
-      .tile {
-        width: var(--s);
-        margin: var(--m);
-        height: calc(var(--s) * 1.1547);
-        display: inline-block;
-        font-size: initial;
-        background-color: #666;
-        clip-path: polygon(
-          0% 25%,
-          0% 75%,
-          50% 100%,
-          100% 75%,
-          100% 25%,
-          50% 0%
-        );
-        margin-bottom: calc(var(--m) - var(--s) * 0.2885);
-      }
-      .tile:nth-child(odd) {
-        background: #aaa;
-      }
 
       #board::before,
       #board i {
@@ -102,12 +64,12 @@
         width: calc(50% - var(--m) - var(--s) / 2);
         float: left;
         height: calc(var(--f) * (var(--nr) - 1) / 2);
-        shape-outside: linear-gradient(to bottom right, #000 49%, #0000 0);
+        shape-outside: linear-gradient(to bottom right, #000 45%, #0000 0);
       }
 
       #board i {
         float: right;
-        shape-outside: linear-gradient(to bottom left, #000 49%, #0000 0);
+        shape-outside: linear-gradient(to bottom left, #000 45%, #0000 0);
       }
     </style>
   </head>
@@ -120,6 +82,7 @@
     <main>
       <div id="game">
         <div id="board">
+          <i></i>
           <div class="tile"></div>
           <div class="tile"></div>
           <div class="tile"></div>
