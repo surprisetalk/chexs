@@ -52,29 +52,35 @@
       .c2 {
         background: #aaa;
       }
-      .p::after {
+      [piece="p"]::after {
         content: "♟";
       }
-      .b::after {
+      [piece="b"]::after {
         content: "♝";
       }
-      .k::after {
+      [piece="k"]::after {
         content: "♚";
       }
-      .q::after {
+      [piece="q"]::after {
         content: "♛";
       }
-      .r::after {
+      [piece="r"]::after {
         content: "♜";
       }
-      .n::after {
+      [piece="n"]::after {
         content: "♞";
       }
-      .black {
+      [color="b"] {
         color: black;
       }
-      .white {
+      [color="w"] {
         color: white;
+      }
+      .selected {
+        background: darkgreen;
+      }
+      .possible {
+        background: yellow;
       }
     </style>
   </head>
@@ -180,6 +186,45 @@
         }
       });
       const game_id = new URLSearchParams(window.location.search).get("id");
+      async function move() {
+        const selected = document.querySelector(".tile.selected");
+        if (selected) {
+          selected.classList.remove("selected");
+          for (const b of document.querySelectorAll(".tile.possible"))
+            b.classList.remove("possible");
+        } else {
+          this.classList.add("selected");
+          const q = parseInt(this.getAttribute("q"));
+          const r = parseInt(this.getAttribute("r"));
+          const s = parseInt(this.getAttribute("s"));
+          const poss = x => x && x.classList.add("possible");
+          switch (this.getAttribute("piece")) {
+            case "r":
+              // TODO: Other cases
+              for (let i = q + 1; i < 100; i++)
+                if (
+                  document
+                    .querySelector(`[q="${i}"][r="${r}"]`)
+                    ?.getAttribute("piece")
+                ) {
+                  break;
+                } else {
+                  poss(document.querySelector(`[q="${i}"][r="${r}"]`));
+                }
+              for (let i = r + 1; i < 100; i++)
+                if (
+                  document
+                    .querySelector(`[q="${q}"][r="${i}"]`)
+                    ?.getAttribute("piece")
+                ) {
+                  break;
+                } else {
+                  poss(document.querySelector(`[q="${q}"][r="${i}"]`));
+                }
+              break;
+          }
+        }
+      }
       if (game_id) {
         fetch(`/game/${game_id}`).then(async res => {
           const game = await res.json();
@@ -211,6 +256,7 @@
                   Math.round(
                     4 * (w + m) + (((w + m) / 2) * (2 * q - r - s)) / 2
                   ) + "px";
+                div.onclick = move;
                 board.append(div);
               }
             for (const piece of game._board) {
@@ -219,10 +265,10 @@
               const r = parseInt(r_);
               document
                 .querySelector(`[q="${q}"][r="${r}"]`)
-                .classList.add(p[0].toLowerCase());
+                .setAttribute("piece", p[0].toLowerCase());
               document
                 .querySelector(`[q="${q}"][r="${r}"]`)
-                .classList.add(p[1] === "B" ? "black" : "white");
+                .setAttribute("color", p[1].toLowerCase());
             }
           }
           // document.querySelector("#game pre").innerText = JSON.stringify(
