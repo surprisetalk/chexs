@@ -5,24 +5,32 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <style>
+      html * {
+        box-sizing: border-box;
+      }
+
       .logged-in,
       .logged-out {
         display: none;
       }
 
-      #board {
-        width: 20rem;
-        height: 20rem;
-        --s: 30px;
+      #game {
       }
 
-      /* In the flat top orientation, the horizontal distance between adjacent hexagons centers is horiz = 3/4 * width = 3/2 * size. The vertical distance is vert = height = sqrt(3) * size. */
+      #board {
+        --w: 35px;
+        --h: calc(var(--w) / 1.1547);
+        width: calc((var(--w) + 5px) * 11 * (3 / 4));
+        height: calc((var(--h) + 5px) * 11);
+      }
 
       .tile {
         position: absolute;
-        width: var(--s);
-        height: calc(var(--s) / 1.1547);
-        background-color: #666;
+        text-align: center;
+        font-size: 2rem;
+        line-height: 0.9;
+        width: var(--w);
+        height: var(--h);
         clip-path: polygon(
           25% 0%,
           75% 0%,
@@ -32,8 +40,41 @@
           0% 50%
         );
       }
-      .tile:nth-child(odd) {
+      .tile:hover {
+        opacity: 0.8;
+      }
+      .c0 {
+        background: #ccc;
+      }
+      .c1 {
+        background: #666;
+      }
+      .c2 {
         background: #aaa;
+      }
+      .p::after {
+        content: "♟";
+      }
+      .b::after {
+        content: "♝";
+      }
+      .k::after {
+        content: "♚";
+      }
+      .q::after {
+        content: "♛";
+      }
+      .r::after {
+        content: "♜";
+      }
+      .n::after {
+        content: "♞";
+      }
+      .black {
+        color: black;
+      }
+      .white {
+        color: white;
       }
     </style>
   </head>
@@ -75,6 +116,7 @@
       </div>
     </footer>
     <script>
+      // TODO: Show a coordinate system and make the entire board controllable by keyboard.
       const checkUser = async () => {
         const res = await fetch("/usr");
         let usr;
@@ -150,18 +192,38 @@
               );
           else {
             const board = document.querySelector("#board");
-            for (const q of new Array(11).fill(null).map((_, i) => i))
-              for (const r of new Array(11).fill(null).map((_, i) => i)) {
+            for (const q of new Array(11).fill(null).map((_, i) => i - 5))
+              for (const r of new Array(11).fill(null).map((_, i) => i - 5)) {
                 const s = 0 - q - r;
-                const w = 30;
+                const w = 35;
                 const h = w / 1.1547;
-                // TODO: omit the ones that aren't part of the board
+                const m = 5;
+                if (Math.abs(q) > 5 || Math.abs(r) > 5 || Math.abs(s) > 5)
+                  continue;
                 const div = document.createElement("div");
-                div.className = "tile";
-                div.style.top = `${Math.round(-h * (s / 2 - r / 2))}px`;
-                div.style.right = `${Math.round(h * (q - r / 2 - s / 2))}px`;
+                div.setAttribute("q", q);
+                div.setAttribute("r", r);
+                div.setAttribute("s", s);
+                div.className = `tile c${(100 + q - r) % 3}`;
+                div.style.top =
+                  Math.round(6.5 * (h + m) + ((h + m) * (r - s)) / 2) + "px";
+                div.style.left =
+                  Math.round(
+                    4 * (w + m) + (((w + m) / 2) * (2 * q - r - s)) / 2
+                  ) + "px";
                 board.append(div);
               }
+            for (const piece of game._board) {
+              const [p, q_, r_] = piece.split(":");
+              const q = parseInt(q_);
+              const r = parseInt(r_);
+              document
+                .querySelector(`[q="${q}"][r="${r}"]`)
+                .classList.add(p[0].toLowerCase());
+              document
+                .querySelector(`[q="${q}"][r="${r}"]`)
+                .classList.add(p[1] === "B" ? "black" : "white");
+            }
           }
           // document.querySelector("#game pre").innerText = JSON.stringify(
           //   game,

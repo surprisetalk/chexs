@@ -140,6 +140,18 @@ router.post("/game", async ctx => {
     "PB:-2:-1",
     "PB:-3:-1",
     "PB:-4:-1",
+    "RW:-3:+5",
+    "NW:-2:+5",
+    "KW:-1:+5",
+    "QW:+1:+4",
+    "NW:+2:+3",
+    "RW:+3:+2",
+    "RB:+3:-5",
+    "NB:+2:-5",
+    "QB:+1:-5",
+    "KB:-1:-4",
+    "NB:-2:-3",
+    "RB:-3:-2",
   ];
   await sql`
     insert into game (game_id, white_usr_id, is_public, _board, _white_username)
