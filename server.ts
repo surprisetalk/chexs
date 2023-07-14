@@ -203,14 +203,22 @@ router.post("/game/:game_id", async ctx => {
       `;
       if (!game) throw new Error("404");
       if (!from && !to) return;
-      if (!game.board[from.q][from.r]) throw new Error("400");
-      if (game.board[to.q][to.r] === undefined) throw new Error("400");
+      // TODO: throw 400 if piece doesn't exist
+      // TODO: throw 400 if out-of-bounds
       // TODO: end game if checkmate or stalemate
       const q_ = to.q - from.q;
       const r_ = to.r - from.r;
       const abs = Math.abs;
       // TODO: Validate all moves (and captures) by piece.
-      switch (game.board[from.q][from.r]?.[0]) {
+      switch (
+        game._board.filter(
+          x =>
+            x.slice(2) ===
+            `:${from.q.toString().padStart(2, "+")}:${from.r
+              .toString()
+              .padStart(2, "+")}`
+        )?.[0]
+      ) {
         case "K":
           if (abs(q_) > 2 || abs(r_) > 2 || abs(q_ + r_) > 1) {
             return (ctx.response.status = 400);
@@ -241,11 +249,13 @@ router.post("/game/:game_id", async ctx => {
           return (ctx.response.status = 400);
       }
 
-      // TODO: insert stuff
-
-      // games[id].board[to.q][to.r] = games[id].board[from.q][from.r];
-      // games[id].board[from.q][from.r] = null;
-      // games[id].history.push([ [from.q, from.r], [to.q, to.r] ]);
+      const move = {};
+      await sql`
+        with move_ as (insert into move ${sql(move)})
+        update game 
+        set _board = array_remove(array_remove(_board, ${from_}), ${cap_}) || ${to_}
+        where game_id = ${game_id};
+      `;
     });
 
     ctx.response.status = 204;
