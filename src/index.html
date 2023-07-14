@@ -9,9 +9,39 @@
         box-sizing: border-box;
       }
 
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background-color: #888;
+      }
+
       .logged-in,
       .logged-out {
         display: none;
+      }
+
+      header,
+      footer {
+        background-color: #888;
+        margin: 0;
+        padding: 1rem;
+        display: flex;
+        gap: 1rem;
+      }
+
+      main {
+        display: grid;
+        grid-template-columns: 1fr 12rem;
+        background-color: white;
+        padding: 1rem;
+      }
+
+      ul {
+        padding-left: 20px;
+      }
+
+      #games li {
+        font-size: 0.8rem;
       }
 
       #game {
@@ -94,10 +124,9 @@
       <div id="game">
         <div id="board"></div>
       </div>
-      <div id="games">
-        <h2>games</h2>
+      <aside id="games">
         <button onclick="start()" id="new-game">new game</button>
-      </div>
+      </aside>
     </main>
     <footer>
       <div class="logged-out">
@@ -186,6 +215,7 @@
         }
       });
       const game_id = new URLSearchParams(window.location.search).get("id");
+      const tile = (q, r) => document.querySelector(`[q="${q}"][r="${r}"]`);
       async function move() {
         const selected = document.querySelector(".tile.selected");
         if (selected) {
@@ -194,33 +224,54 @@
             b.classList.remove("possible");
         } else {
           this.classList.add("selected");
+          const color = this.getAttribute("color");
           const q = parseInt(this.getAttribute("q"));
           const r = parseInt(this.getAttribute("r"));
           const s = parseInt(this.getAttribute("s"));
-          const poss = x => x && x.classList.add("possible");
+          const poss = x =>
+            x && x.classList.add("possible") && x.getAttribute("color");
           switch (this.getAttribute("piece")) {
+            case "p":
+              // TODO: first move? look through move history
+              // TODO: en passant
+              // TODO: normal capturing
+              const c = color == "b" ? 1 : -1;
+              poss(tile(q, r + c));
+              break;
+            case "b":
+              // TODO: This doesn't work...
+              // TODO: Add more cases?
+              for (let i = q + 2; i < 100; i++)
+                if (tile(q + 2 * i, r - i)?.getAttribute("color") === color)
+                  break;
+                else if (poss(tile(q + 2 * i, r - i))) break;
+              for (let i = r + 2; i < 100; i++)
+                if (tile(q - i, r + 2 * i)?.getAttribute("color") === color)
+                  break;
+                else if (poss(tile(q - i, r + 2 * i))) break;
+              for (let i = s + 2; i < 100; i++)
+                if (tile(q - i, r - i)?.getAttribute("color") === color) break;
+                else if (poss(tile(q - i, r - i))) break;
+              break;
             case "r":
-              // TODO: Other cases
               for (let i = q + 1; i < 100; i++)
-                if (
-                  document
-                    .querySelector(`[q="${i}"][r="${r}"]`)
-                    ?.getAttribute("piece")
-                ) {
-                  break;
-                } else {
-                  poss(document.querySelector(`[q="${i}"][r="${r}"]`));
-                }
+                if (tile(i, r)?.getAttribute("color") === color) break;
+                else if (poss(tile(i, r))) break;
+              for (let i = q - 1; i > -100; i--)
+                if (tile(i, r)?.getAttribute("color") === color) break;
+                else if (poss(tile(i, r))) break;
               for (let i = r + 1; i < 100; i++)
-                if (
-                  document
-                    .querySelector(`[q="${q}"][r="${i}"]`)
-                    ?.getAttribute("piece")
-                ) {
-                  break;
-                } else {
-                  poss(document.querySelector(`[q="${q}"][r="${i}"]`));
-                }
+                if (tile(q, i)?.getAttribute("color") === color) break;
+                else if (poss(tile(q, i))) break;
+              for (let i = r - 1; i > -100; i--)
+                if (tile(q, i)?.getAttribute("color") === color) break;
+                else if (poss(tile(q, i))) break;
+              for (let i = 1; i < 100; i++)
+                if (tile(q + i, r - i)?.getAttribute("color") === color) break;
+                else if (poss(tile(q + i, r - i))) break;
+              for (let i = 1; i < 100; i++)
+                if (tile(q - i, r + i)?.getAttribute("color") === color) break;
+                else if (poss(tile(q - i, r + i))) break;
               break;
           }
         }
