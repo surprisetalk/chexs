@@ -203,57 +203,77 @@ router.post("/game/:game_id", async ctx => {
       `;
       if (!game) throw new Error("404");
       if (!from && !to) return;
+      const p = game._board.filter(x =>
+        x.endsWith(
+          [
+            from.q.toString().padStart(2, "+"),
+            from.r.toString().padStart(2, "+"),
+          ].join(":")
+        )
+      )?.[0]?.[0];
+      const _piece = (p + color[0]).toUpperCase();
+      const from_ = [
+        _piece,
+        from.q.toString().padStart(2, "+"),
+        from.r.toString().padStart(2, "+"),
+      ].join(":");
+      const to_ = [
+        _piece,
+        to.q.toString().padStart(2, "+"),
+        to.r.toString().padStart(2, "+"),
+      ].join(":");
+      const cap_ =
+        game._board.filter(x => x.endsWith(to_.slice(2)))?.[0] ?? null;
       // TODO: throw 400 if piece doesn't exist
       // TODO: throw 400 if out-of-bounds
       // TODO: end game if checkmate or stalemate
-      const q_ = to.q - from.q;
-      const r_ = to.r - from.r;
-      const abs = Math.abs;
+      // const q_ = to.q - from.q;
+      // const r_ = to.r - from.r;
+      // const abs = Math.abs;
       // TODO: Validate all moves (and captures) by piece.
-      switch (
-        game._board.filter(
-          x =>
-            x.slice(2) ===
-            `:${from.q.toString().padStart(2, "+")}:${from.r
-              .toString()
-              .padStart(2, "+")}`
-        )?.[0]
-      ) {
-        case "K":
-          if (abs(q_) > 2 || abs(r_) > 2 || abs(q_ + r_) > 1) {
-            return (ctx.response.status = 400);
-          }
-          break;
-        case "Q":
-          throw new Error("TODO");
-          break;
-        case "R":
-          throw new Error("TODO");
-          break;
-        case "N":
-          throw new Error("TODO");
-          break;
-        case "B":
-          if (
-            !(q_ === r_ || 2 * abs(q_) === abs(r_) || 2 * abs(r_) === abs(q_))
-          ) {
-            return (ctx.response.status = 400);
-          }
-          throw new Error("TODO");
-          break;
-        case "P":
-          // TODO: direction based on board[from.q][from.r]?.[1]
-          throw new Error("TODO");
-          break;
-        default:
-          return (ctx.response.status = 400);
-      }
-
-      const move = {};
+      // switch (p) {
+      //   case "K":
+      //     if (abs(q_) > 2 || abs(r_) > 2 || abs(q_ + r_) > 1) {
+      //       throw new Error("400");
+      //     }
+      //     break;
+      //   case "Q":
+      //     throw new Error("TODO");
+      //     break;
+      //   case "R":
+      //     throw new Error("TODO");
+      //     break;
+      //   case "N":
+      //     throw new Error("TODO");
+      //     break;
+      //   case "B":
+      //     if (
+      //       !(q_ === r_ || 2 * abs(q_) === abs(r_) || 2 * abs(r_) === abs(q_))
+      //     ) {
+      //       throw new Error("400");
+      //     }
+      //     throw new Error("TODO");
+      //     break;
+      //   case "P":
+      //     // TODO: direction based on board[from.q][from.r]?.[1]
+      //     throw new Error("TODO");
+      //     break;
+      //   default:
+      //     ctx.response.status = 400;
+      //     throw new Error("TODO");
+      // }
+      const move = {
+        game_id,
+        _piece,
+        piece_from_q: from.q,
+        piece_from_r: from.r,
+        piece_to_q: to.q,
+        piece_to_r: to.r,
+      };
       await sql`
         with move_ as (insert into move ${sql(move)})
         update game 
-        set _board = array_remove(array_remove(_board, ${from_}), ${cap_}) || ${to_}
+        set _board = array_remove(array_remove(_board, ${from_}), ${cap_}) || ${to_}::text
         where game_id = ${game_id};
       `;
     });
