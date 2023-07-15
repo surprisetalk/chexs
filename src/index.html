@@ -309,20 +309,11 @@
         const selected = qs(".tile.selected");
         if (selected) {
           const color = selected?.getAttribute("color");
-          if (this !== selected)
-            await fetch(`/game/${game_id}`, {
-              method: "POST",
-              body: JSON.stringify({
-                color: color === "w" ? "white" : "black",
-                from: {
-                  q: parseInt(selected.getAttribute("q")),
-                  r: parseInt(selected.getAttribute("r")),
-                },
-                to: {
-                  q: parseInt(this.getAttribute("q")),
-                  r: parseInt(this.getAttribute("r")),
-                },
-              }),
+          if (!this.classList.contains("selected"))
+            await post(`/game/${game_id}`, {
+              color: color === "w" ? "white" : "black",
+              from: tile(selected),
+              to: tile(this),
             });
           selected.classList.remove("selected");
           for (const b of qsa(".tile.possible")) b.classList.remove("possible");
