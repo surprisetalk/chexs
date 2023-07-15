@@ -5,7 +5,7 @@ primary_region = "lax"
 PORT = "8666"
 
 [processes]
-app = "run -A ./server.ts"
+app = "run --allow-env --allow-net --allow-read ./server.ts"
 
 [http_service]
 internal_port = 8666
