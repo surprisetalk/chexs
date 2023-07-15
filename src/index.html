@@ -48,10 +48,18 @@
       }
 
       #board {
-        --w: 35px;
+        --w: 50px;
         --h: calc(var(--w) / 1.1547);
-        width: calc((var(--w) + 5px) * 11 * (3 / 4));
-        height: calc((var(--h) + 5px) * 11);
+        width: calc((var(--w) + 10px) * 8.4);
+        height: calc((var(--h) + 10px) * 11);
+        margin: 0 auto;
+      }
+
+      @media (max-width: 42rem) {
+        #board {
+          scale: 0.75;
+          clear: both;
+        }
       }
 
       .tile {
@@ -340,9 +348,9 @@
             for (const q of new Array(11).fill(null).map((_, i) => i - 5))
               for (const r of new Array(11).fill(null).map((_, i) => i - 5)) {
                 const s = 0 - q - r;
-                const w = 35;
+                const w = 50;
                 const h = w / 1.1547;
-                const m = 5;
+                const m = 10;
                 if (Math.abs(q) > 5 || Math.abs(r) > 5 || Math.abs(s) > 5)
                   continue;
                 const div = document.createElement("div");
@@ -351,10 +359,10 @@
                 div.setAttribute("s", s);
                 div.className = `tile c${(100 + q - r) % 3}`;
                 div.style.top =
-                  Math.round(6.5 * (h + m) + ((h + m) * (r - s)) / 2) + "px";
+                  Math.round(7 * (h + m) + ((h + m) * (r - s)) / 2) + "px";
                 div.style.left =
                   Math.round(
-                    4 * (w + m) + (((w + m) / 2) * (2 * q - r - s)) / 2
+                    4.2 * (w + m) + (((w + m) / 2) * (2 * q - r - s)) / 2
                   ) + "px";
                 div.onclick = move;
                 div.onmouseenter = e => highlight(e.target);
