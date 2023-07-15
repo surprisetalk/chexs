@@ -2,13 +2,13 @@ app = "chexs"
 primary_region = "lax"
 
 [env]
-PORT = "8080"
+PORT = "8666"
 
 [processes]
 app = "run -A ./server.ts"
 
 [http_service]
-internal_port = 8080
+internal_port = 8666
 force_https = true
 auto_stop_machines = true
 auto_start_machines = true
