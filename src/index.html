@@ -10,9 +10,9 @@
       }
 
       body {
+        font-family: system-ui, -apple-system, "Helvetica Neue", sans-serif;
         margin: 0;
         min-height: 100vh;
-        background-color: #888;
       }
 
       .logged-in,
@@ -20,20 +20,35 @@
         display: none;
       }
 
+      body,
       header,
       footer {
-        background-color: #888;
-        margin: 0;
-        padding: 1rem;
+        background-color: #eee;
+      }
+
+      header > div,
+      footer > div {
         display: flex;
         gap: 1rem;
+        margin: 0;
+        padding: 1rem;
       }
 
       main {
+        background-color: white;
+      }
+
+      main > div {
         display: grid;
         grid-template-columns: 1fr 12rem;
-        background-color: white;
         padding: 1rem;
+      }
+
+      main > div,
+      header > div,
+      footer > div {
+        max-width: 1020px;
+        margin: 0 auto;
       }
 
       ul {
@@ -44,10 +59,8 @@
         font-size: 0.8rem;
       }
 
-      #game {
-      }
-
       #board {
+        position: relative;
         --w: 50px;
         --h: calc(var(--w) / 1.1547);
         width: calc((var(--w) + 10px) * 8.4);
@@ -58,14 +71,21 @@
       @media (max-width: 42rem) {
         #board {
           scale: 0.75;
-          clear: both;
+          width: 20rem;
+          height: 30rem;
+          margin: 0;
+          margin-top: -2rem;
+          margin-bottom: 4rem;
+        }
+        main {
+          grid-template-columns: 1fr;
         }
       }
 
       .tile {
         position: absolute;
         text-align: center;
-        font-size: 2rem;
+        font-size: 2.5rem;
         line-height: 0.9;
         width: var(--w);
         height: var(--h);
@@ -127,38 +147,44 @@
   </head>
   <body>
     <header>
-      <a href="/">chexs</a>
-      <a class="logged-out" href="#signup">signup/login</a>
-      <button class="logged-in" onclick="logout()">logout</button>
+      <div>
+        <a href="/">chexs</a>
+        <a class="logged-out" href="#signup">signup/login</a>
+        <button class="logged-in" onclick="logout()">logout</button>
+      </div>
     </header>
     <main>
-      <div id="game">
-        <div id="board"></div>
+      <div>
+        <div id="game">
+          <div id="board"></div>
+        </div>
+        <aside id="games">
+          <button onclick="start()" id="new-game">new game</button>
+        </aside>
       </div>
-      <aside id="games">
-        <button onclick="start()" id="new-game">new game</button>
-      </aside>
     </main>
     <footer>
-      <div class="logged-out">
-        <pre id="usr"></pre>
-        <form
-          id="signup"
-          onsubmit="event.preventDefault() ; signup() ; return false"
-        >
-          <input name="email" type="email" />
-          <input name="username" type="username" />
-          <input name="password" type="password" />
-          <button type="submit">signup</button>
-        </form>
-        <form
-          id="login"
-          onsubmit="event.preventDefault() ; login() ; return false"
-        >
-          <input name="username" type="username" />
-          <input name="password" type="password" />
-          <button type="submit">login</button>
-        </form>
+      <div>
+        <div class="logged-out">
+          <pre id="usr"></pre>
+          <form
+            id="signup"
+            onsubmit="event.preventDefault() ; signup() ; return false"
+          >
+            <input name="email" type="email" />
+            <input name="username" type="username" />
+            <input name="password" type="password" />
+            <button type="submit">signup</button>
+          </form>
+          <form
+            id="login"
+            onsubmit="event.preventDefault() ; login() ; return false"
+          >
+            <input name="username" type="username" />
+            <input name="password" type="password" />
+            <button type="submit">login</button>
+          </form>
+        </div>
       </div>
     </footer>
     <script>
@@ -359,10 +385,10 @@
                 div.setAttribute("s", s);
                 div.className = `tile c${(100 + q - r) % 3}`;
                 div.style.top =
-                  Math.round(7 * (h + m) + ((h + m) * (r - s)) / 2) + "px";
+                  Math.round(5 * (h + m) + ((h + m) * (r - s)) / 2) + "px";
                 div.style.left =
                   Math.round(
-                    4.2 * (w + m) + (((w + m) / 2) * (2 * q - r - s)) / 2
+                    3.75 * (w + m) + (((w + m) / 2) * (2 * q - r - s)) / 2
                   ) + "px";
                 div.onclick = move;
                 div.onmouseenter = e => highlight(e.target);
