@@ -71,8 +71,9 @@
         );
       }
       .tile:hover {
-        opacity: 0.8;
+        opacity: 0.6;
       }
+
       .c0 {
         background: #ccc;
       }
@@ -82,6 +83,7 @@
       .c2 {
         background: #aaa;
       }
+
       [piece="p"]::after {
         content: "♟";
       }
@@ -106,6 +108,7 @@
       [color="w"] {
         color: white;
       }
+
       .possible {
         background: yellow;
       }
@@ -151,57 +154,64 @@
       </div>
     </footer>
     <script>
-      // TODO: Show a coordinate system and make the entire board controllable by keyboard.
-      const checkUser = async () => {
+      const qs = (...args) => document.querySelector(...args);
+      const qsa = (...args) => document.querySelectorAll(...args);
+
+      async function checkUser() {
         const res = await fetch("/usr");
         let usr;
         try {
           usr = await res.json();
         } catch (_) {}
-        document.querySelector("#usr").innerText = usr
-          ? JSON.stringify(usr, null, 2)
-          : "";
-        for (const x of document.querySelectorAll(".logged-in"))
+        qs("#usr").innerText = usr ? JSON.stringify(usr, null, 2) : "";
+        for (const x of qsa(".logged-in"))
           x.style.display = usr ? "block" : "none";
-        for (const x of document.querySelectorAll(".logged-out"))
+        for (const x of qsa(".logged-out"))
           x.style.display = usr ? "none" : "block";
-      };
-      checkUser();
-      const logout = async () => {
+      }
+
+      async function logout() {
         await fetch("/logout", { method: "POST" });
         await checkUser();
-      };
-      const login = async () => {
+      }
+
+      async function login() {
         await fetch("/login", {
           method: "POST",
           body: JSON.stringify({
-            username: document.querySelector("#login [name=username]").value,
-            password: document.querySelector("#login [name=password]").value,
+            username: qs("#login [name=username]").value,
+            password: qs("#login [name=password]").value,
           }),
         });
         await checkUser();
-      };
-      const signup = async () => {
+      }
+
+      async function signup() {
         await fetch("/signup", {
           method: "POST",
           body: JSON.stringify({
-            email: document.querySelector("#signup [name=email]").value,
-            username: document.querySelector("#signup [name=username]").value,
-            password: document.querySelector("#signup [name=password]").value,
+            email: qs("#signup [name=email]").value,
+            username: qs("#signup [name=username]").value,
+            password: qs("#signup [name=password]").value,
           }),
         });
-      };
-      const start = async () => {
+      }
+
+      async function start() {
         await fetch("/game", { method: "POST" });
-      };
-      const join = async game_id => {
+      }
+
+      async function join(game_id) {
         await fetch(`/game/${game_id}`, {
           method: "POST",
           body: JSON.stringify({ color: "black" }),
         });
-      };
+      }
+
+      checkUser();
+
       fetch("/game").then(async res => {
-        const games = document.querySelector("#games");
+        const games = qs("#games");
         const glist = await res.json();
         const ulli = xs => `<ul>${xs.map(x => `<li>${x}</li>`).join("")}</ul>`;
         const game = g =>
@@ -214,12 +224,14 @@
           games.insertAdjacentHTML("beforeend", ulli(glist[x].map(game)));
         }
       });
+
       const game_id = new URLSearchParams(window.location.search).get("id");
-      const tile = (q, r) => document.querySelector(`[q="${q}"][r="${r}"]`);
+
+      const tile = (q, r) => qs(`[q="${q}"][r="${r}"]`);
+
       function highlight(x) {
-        if (document.querySelector(".selected")) return;
-        for (const b of document.querySelectorAll(".tile.possible"))
-          b.classList.remove("possible");
+        if (qs(".selected")) return;
+        for (const b of qsa(".tile.possible")) b.classList.remove("possible");
         if (!x) return;
         const color = x.getAttribute("color");
         const q = parseInt(x.getAttribute("q"));
@@ -274,8 +286,9 @@
             break;
         }
       }
+
       async function move() {
-        const selected = document.querySelector(".tile.selected");
+        const selected = qs(".tile.selected");
         if (selected) {
           const color = selected?.getAttribute("color");
           if (this !== selected)
@@ -294,14 +307,14 @@
               }),
             });
           selected.classList.remove("selected");
-          for (const b of document.querySelectorAll(".tile.possible"))
-            b.classList.remove("possible");
+          for (const b of qsa(".tile.possible")) b.classList.remove("possible");
           await game();
         } else {
           highlight(this);
           this.classList.add("selected");
         }
       }
+
       async function game() {
         fetch(`/game/${game_id}`).then(async res => {
           const game = await res.json();
@@ -313,8 +326,8 @@
                 `<button onclick="join('${game_id}')">join game</button>`
               );
           else {
-            document.querySelector("#board").innerHTML = "";
-            const board = document.querySelector("#board");
+            qs("#board").innerHTML = "";
+            const board = qs("#board");
             for (const q of new Array(11).fill(null).map((_, i) => i - 5))
               for (const r of new Array(11).fill(null).map((_, i) => i - 5)) {
                 const s = 0 - q - r;
@@ -357,6 +370,7 @@
           }
         });
       }
+
       if (game_id) game();
     </script>
   </body>
