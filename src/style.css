@@ -81,7 +81,7 @@ ul {
   height: calc((var(--h) + 10px) * 11);
 }
 
-@media (max-width: 42rem) {
+@media (max-width: 36rem) {
   #board {
     scale: 0.75;
     width: 20rem;
@@ -90,10 +90,8 @@ ul {
     margin-top: -2rem;
     margin-bottom: 4rem;
   }
-  main > div {
-    grid-template-columns: 1fr;
-  }
-  #account {
+  #account,
+  #games {
     grid-template-columns: 1fr;
   }
 }
