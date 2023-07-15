@@ -28,10 +28,19 @@
 
       header > div,
       footer > div {
-        display: flex;
         gap: 1rem;
         margin: 0;
         padding: 1rem;
+      }
+
+      header > div {
+        display: flex;
+        justify-content: space-between;
+      }
+
+      header nav {
+        display: flex;
+        gap: 1rem;
       }
 
       main {
@@ -41,18 +50,22 @@
       main > div {
         display: grid;
         grid-template-columns: 1fr 12rem;
-        padding: 1rem;
+        padding: 3rem 1rem 4rem;
       }
 
       main > div,
       header > div,
       footer > div {
-        max-width: 1020px;
+        max-width: 825px;
         margin: 0 auto;
       }
 
       ul {
         padding-left: 20px;
+      }
+
+      #games {
+        overflow-y: auto;
       }
 
       #games li {
@@ -65,7 +78,6 @@
         --h: calc(var(--w) / 1.1547);
         width: calc((var(--w) + 10px) * 8.4);
         height: calc((var(--h) + 10px) * 11);
-        margin: 0 auto;
       }
 
       @media (max-width: 42rem) {
@@ -77,7 +89,7 @@
           margin-top: -2rem;
           margin-bottom: 4rem;
         }
-        main {
+        main > div {
           grid-template-columns: 1fr;
         }
       }
@@ -148,9 +160,17 @@
   <body>
     <header>
       <div>
-        <a href="/">chexs</a>
-        <a class="logged-out" href="#signup">signup/login</a>
-        <button class="logged-in" onclick="logout()">logout</button>
+        <nav>
+          <a href="/">chexs</a>
+        </nav>
+        <nav>
+          <a href="/about">about</a>
+          <a class="logged-out" href="#signup">signup/login</a>
+          <button onclick="start()" class="logged-in" id="new-game">
+            new game
+          </button>
+          <button class="logged-in" onclick="logout()">logout</button>
+        </nav>
       </div>
     </header>
     <main>
@@ -158,9 +178,7 @@
         <div id="game">
           <div id="board"></div>
         </div>
-        <aside id="games">
-          <button onclick="start()" id="new-game">new game</button>
-        </aside>
+        <aside id="games"></aside>
       </div>
     </main>
     <footer>
