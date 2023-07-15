@@ -246,33 +246,33 @@
             break;
           case "b":
             run(i => qt(q + 2 * i, r - i));
-            run(i => qt(q - 2 * i, r + i));
-            run(i => qt(q + i, r - 2 * i));
-            run(i => qt(q - i, r + 2 * i));
             run(i => qt(q + i, r + i));
+            run(i => qt(q + i, r - 2 * i));
+            run(i => qt(q - 2 * i, r + i));
+            run(i => qt(q - i, r + 2 * i));
             run(i => qt(q - i, r - i));
             break;
           case "r":
+            run(i => qt(q + i, r - i));
             run(i => qt(q + i, r));
+            run(i => qt(q - i, r + i));
             run(i => qt(q - i, r));
             run(i => qt(q, r + i));
             run(i => qt(q, r - i));
-            run(i => qt(q + i, r - i));
-            run(i => qt(q - i, r + i));
             break;
           case "q":
             run(i => qt(q + 2 * i, r - i));
-            run(i => qt(q - 2 * i, r + i));
-            run(i => qt(q + i, r - 2 * i));
-            run(i => qt(q - i, r + 2 * i));
             run(i => qt(q + i, r + i));
-            run(i => qt(q - i, r - i));
+            run(i => qt(q + i, r - 2 * i));
+            run(i => qt(q + i, r - i));
             run(i => qt(q + i, r));
+            run(i => qt(q - 2 * i, r + i));
+            run(i => qt(q - i, r + 2 * i));
+            run(i => qt(q - i, r + i));
+            run(i => qt(q - i, r - i));
             run(i => qt(q - i, r));
             run(i => qt(q, r + i));
             run(i => qt(q, r - i));
-            run(i => qt(q + i, r - i));
-            run(i => qt(q - i, r + i));
             break;
           case "n":
             hop(qt(q + 1, r + 2));
@@ -289,18 +289,18 @@
             hop(qt(q - 3, r + 2));
             break;
           case "k":
-            hop(qt(q + 1, r + 1));
-            hop(qt(q - 1, r - 1));
-            hop(qt(q + 1, r - 1));
-            hop(qt(q - 1, r + 1));
-            hop(qt(q + 1, r + 0));
-            hop(qt(q - 1, r + 0));
             hop(qt(q + 0, r + 1));
             hop(qt(q + 0, r - 1));
-            hop(qt(q + 2, r - 1));
-            hop(qt(q - 2, r + 1));
+            hop(qt(q + 1, r + 0));
+            hop(qt(q + 1, r + 1));
+            hop(qt(q + 1, r - 1));
             hop(qt(q + 1, r - 2));
+            hop(qt(q + 2, r - 1));
+            hop(qt(q - 1, r + 0));
+            hop(qt(q - 1, r + 1));
             hop(qt(q - 1, r + 2));
+            hop(qt(q - 1, r - 1));
+            hop(qt(q - 2, r + 1));
             break;
         }
       }
