@@ -54,7 +54,8 @@ async function signup() {
 async function start() {
   const res = await post("/game");
   await games();
-  window.location.replace(`/game.html?id=${await res.text()}`);
+  const id = await res.text();
+  if (id) window.location.replace(`/game.html?id=${id}`);
 }
 
 async function join(game_id) {
@@ -231,9 +232,11 @@ async function games() {
           ? `<a href="/game.html?id=${g.game_id}">${g._white_username} vs. ${g._black_username}</a>`
           : `<a href="/game.html?id=${g.game_id}">${g._white_username} waiting</a>`;
       for (const x of ["lobby", "active", "recent", "personal"]) {
-        if (!glist[x].length) continue;
-        games.insertAdjacentHTML("beforeend", `<h3>${x}</h3>`);
-        games.insertAdjacentHTML("beforeend", ulli(glist[x].map(game)));
+        if (!glist[x]?.length) continue;
+        games.insertAdjacentHTML(
+          "beforeend",
+          `<div><h3>${x}</h3>${ulli(glist[x].map(game))}</div>`
+        );
       }
     });
 }

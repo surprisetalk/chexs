@@ -1,19 +1,23 @@
-<div>
-  <div class="logged-out">
-    <pre id="usr"></pre>
-    <form
-      id="signup"
-      onsubmit="event.preventDefault() ; signup() ; return false"
-    >
-      <input name="email" type="email" />
-      <input name="username" type="username" />
-      <input name="password" type="password" />
-      <button type="submit">signup</button>
-    </form>
-    <form id="login" onsubmit="event.preventDefault() ; login() ; return false">
-      <input name="username" type="username" />
-      <input name="password" type="password" />
-      <button type="submit">login</button>
-    </form>
-  </div>
+<div id="account">
+  <form
+    id="login"
+    class="logged-out"
+    onsubmit="event.preventDefault() ; login() ; return false"
+  >
+    <h2>login</h2>
+    <label>username: <input name="username" type="text" /></label>
+    <label>password: <input name="password" type="password" /></label>
+    <button type="submit">login</button>
+  </form>
+  <form
+    id="signup"
+    class="logged-out"
+    onsubmit="event.preventDefault() ; signup() ; return false"
+  >
+    <h2>signup</h2>
+    <label>email: <input name="email" type="email" /></label>
+    <label>username: <input name="username" type="text" /></label>
+    <label>password: <input name="password" type="password" /></label>
+    <button type="submit">signup</button>
+  </form>
 </div>

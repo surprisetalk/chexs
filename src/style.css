@@ -41,8 +41,6 @@ main {
 }
 
 main > div {
-  display: grid;
-  grid-template-columns: 1fr 12rem;
   padding: 3rem 1rem 4rem;
 }
 
@@ -57,8 +55,18 @@ ul {
   padding-left: 20px;
 }
 
+#account form > * {
+  display: block;
+}
+
+#account {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+
 #games {
-  overflow-y: auto;
+  display: grid;
+  grid-template-columns: auto auto auto;
 }
 
 #games li {
@@ -83,6 +91,9 @@ ul {
     margin-bottom: 4rem;
   }
   main > div {
+    grid-template-columns: 1fr;
+  }
+  #account {
     grid-template-columns: 1fr;
   }
 }

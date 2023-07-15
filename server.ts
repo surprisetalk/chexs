@@ -100,14 +100,13 @@ router.get("/usr", async ctx => {
 
 router.get("/game", async ctx => {
   const usr_id = (await ctx.cookies.get("usr_id")) ?? null;
-  const [games] = await sql`
-    select
-      (select jsonb_agg(g.*) from game g where game_id is not null and is_public is true and (white_usr_id is null or black_usr_id is null)) as lobby
-    , (select jsonb_agg(g.*) from game g where game_id is not null and is_public is true and white_usr_id is not null and black_usr_id is not null and points is null and now() - created_at < interval '1 day') as active
-    , (select jsonb_agg(g.*) from game g where game_id is not null and is_public is true and points is not null) as recent
-    , (select jsonb_agg(g.*) from game g where game_id is not null and white_usr_id = ${usr_id} or black_usr_id = ${usr_id}) as personal
-  `;
-  ctx.response.body = games;
+  const [lobby, active, recent, personal] = await Promise.all([
+    sql`select * from game where game_id is not null and is_public is true and (white_usr_id is null or black_usr_id is null) order by created_at desc limit 100`,
+    sql`select * from game where game_id is not null and is_public is true and white_usr_id is not null and black_usr_id is not null and points is null and now() - created_at < interval '1 day' order by created_at desc limit 100`,
+    [], // sql`select * from game where game_id is not null and is_public is true and points is not null order by created_at desc limit 100`,
+    sql`select * from game where game_id is not null and white_usr_id = ${usr_id} or black_usr_id = ${usr_id} order by created_at desc limit 100`,
+  ]);
+  ctx.response.body = { lobby, active, recent, personal };
   ctx.response.status = 200;
 });
 
@@ -152,13 +151,13 @@ router.post("/game", async ctx => {
     "NB:-2:-3",
     "RB:-3:-2",
   ];
-  await sql`
+  const [{ game_id } = { game_id: null }] = await sql`
     insert into game (game_id, white_usr_id, is_public, _board, _white_username)
     select ${id}, ${usr_id}, true, ${board}, (select username from usr where usr_id = ${usr_id})
     where not exists (select * from game where white_usr_id = ${usr_id} and black_usr_id is null)
     returning *
   `;
-  ctx.response.body = id;
+  ctx.response.body = game_id;
   ctx.response.status = 201;
 });
 
