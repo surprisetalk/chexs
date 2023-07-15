@@ -218,38 +218,42 @@
       const tile = (q, r) => document.querySelector(`[q="${q}"][r="${r}"]`);
       async function move() {
         const selected = document.querySelector(".tile.selected");
-        const color = this.getAttribute("color");
         if (selected) {
-          await fetch(`/game/${game_id}`, {
-            method: "POST",
-            body: JSON.stringify({
-              color: color === "w" ? "white" : "black",
-              from: {
-                q: parseInt(selected.getAttribute("q")),
-                r: parseInt(selected.getAttribute("r")),
-              },
-              to: {
-                q: parseInt(this.getAttribute("q")),
-                r: parseInt(this.getAttribute("r")),
-              },
-            }),
-          });
+          const color = selected?.getAttribute("color");
+          if (this !== selected)
+            await fetch(`/game/${game_id}`, {
+              method: "POST",
+              body: JSON.stringify({
+                color: color === "w" ? "white" : "black",
+                from: {
+                  q: parseInt(selected.getAttribute("q")),
+                  r: parseInt(selected.getAttribute("r")),
+                },
+                to: {
+                  q: parseInt(this.getAttribute("q")),
+                  r: parseInt(this.getAttribute("r")),
+                },
+              }),
+            });
           selected.classList.remove("selected");
           for (const b of document.querySelectorAll(".tile.possible"))
             b.classList.remove("possible");
         } else {
           this.classList.add("selected");
+          const color = this.getAttribute("color");
           const q = parseInt(this.getAttribute("q"));
           const r = parseInt(this.getAttribute("r"));
           const s = parseInt(this.getAttribute("s"));
-          const poss = x =>
-            x && x.classList.add("possible") && x.getAttribute("color");
+          const c = color == "b" ? 1 : -1;
+          const poss = x => {
+            if (x) x.classList.add("possible");
+            return x?.getAttribute("color");
+          };
           switch (this.getAttribute("piece")) {
             case "p":
               // TODO: first move? look through move history
               // TODO: en passant
               // TODO: normal capturing
-              const c = color == "b" ? 1 : -1;
               poss(tile(q, r + c));
               break;
             case "b":

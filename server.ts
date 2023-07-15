@@ -270,6 +270,7 @@ router.post("/game/:game_id", async ctx => {
         piece_to_q: to.q,
         piece_to_r: to.r,
       };
+      console.log({ from_, cap_, to_, ...move });
       await sql`
         with move_ as (insert into move ${sql(move)})
         update game 
