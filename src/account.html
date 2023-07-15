@@ -1,0 +1,19 @@
+<div>
+  <div class="logged-out">
+    <pre id="usr"></pre>
+    <form
+      id="signup"
+      onsubmit="event.preventDefault() ; signup() ; return false"
+    >
+      <input name="email" type="email" />
+      <input name="username" type="username" />
+      <input name="password" type="password" />
+      <button type="submit">signup</button>
+    </form>
+    <form id="login" onsubmit="event.preventDefault() ; login() ; return false">
+      <input name="username" type="username" />
+      <input name="password" type="password" />
+      <button type="submit">login</button>
+    </form>
+  </div>
+</div>

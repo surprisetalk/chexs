@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>chexs</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <header>
+      <div>
+        <nav>
+          <a href="/">chexs</a>
+        </nav>
+        <nav>
+          <a href="/about">about</a>
+          <a class="logged-out" href="#signup">signup/login</a>
+          <button onclick="start()" class="logged-in" id="new-game">
+            new game
+          </button>
+          <button class="logged-in" onclick="logout()">logout</button>
+        </nav>
+      </div>
+    </header>
+    <main><div>%s</div></main>
+    <script src="/script.js"></script>
+  </body>
+</html>

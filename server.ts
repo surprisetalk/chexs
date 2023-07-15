@@ -102,11 +102,10 @@ router.get("/game", async ctx => {
   const usr_id = (await ctx.cookies.get("usr_id")) ?? null;
   const [games] = await sql`
     select
-      coalesce(jsonb_agg(g.*) filter (where game_id is not null and is_public is true and (white_usr_id is null or black_usr_id is null)),'[]') as pending
-    , coalesce(jsonb_agg(g.*) filter (where game_id is not null and is_public is true and white_usr_id is not null and black_usr_id is not null and points is null and now() - created_at < interval '1 day'),'[]') as active
-    , coalesce(jsonb_agg(g.*) filter (where game_id is not null and is_public is true and points is not null),'[]') as recent
-    , coalesce(jsonb_agg(g.*) filter (where game_id is not null and white_usr_id = ${usr_id} or black_usr_id = ${usr_id}),'[]') as personal
-    from game g
+      (select jsonb_agg(g.*) from game g where game_id is not null and is_public is true and (white_usr_id is null or black_usr_id is null)) as lobby
+    , (select jsonb_agg(g.*) from game g where game_id is not null and is_public is true and white_usr_id is not null and black_usr_id is not null and points is null and now() - created_at < interval '1 day') as active
+    , (select jsonb_agg(g.*) from game g where game_id is not null and is_public is true and points is not null) as recent
+    , (select jsonb_agg(g.*) from game g where game_id is not null and white_usr_id = ${usr_id} or black_usr_id = ${usr_id}) as personal
   `;
   ctx.response.body = games;
   ctx.response.status = 200;
@@ -155,7 +154,8 @@ router.post("/game", async ctx => {
   ];
   await sql`
     insert into game (game_id, white_usr_id, is_public, _board, _white_username)
-    values (${id}, ${usr_id}, true, ${board}, (select username from usr where usr_id = ${usr_id}))
+    select ${id}, ${usr_id}, true, ${board}, (select username from usr where usr_id = ${usr_id})
+    where not exists (select * from game where white_usr_id = ${usr_id} and black_usr_id is null)
     returning *
   `;
   ctx.response.body = id;
@@ -293,8 +293,7 @@ export const app = new Application();
 app.use(async (context, next) => {
   try {
     await context.send({
-      // TODO: use dist instead
-      root: `${Deno.cwd()}/src`,
+      root: `${Deno.cwd()}/dist`,
       index: "index.html",
     });
   } catch {
