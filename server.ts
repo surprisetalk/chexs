@@ -300,4 +300,7 @@ app.use(async (context, next) => {
 app.use(router.routes());
 app.use(router.allowedMethods());
 
-app.listen({ port: parseInt(Deno.env.get(`PORT`) ?? ``) || 8666 });
+app.listen({
+  hostname: "0.0.0.0",
+  port: parseInt(Deno.env.get(`PORT`) ?? ``) || 8666,
+});
