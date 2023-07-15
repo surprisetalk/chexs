@@ -110,10 +110,10 @@
       }
 
       .possible {
-        background: yellow;
+        background: darkorange;
       }
       .selected {
-        background: darkgreen;
+        background: olive;
       }
     </style>
   </head>
@@ -226,6 +226,7 @@
         const poss = x => (
           x && x.classList.add("possible"), x?.getAttribute("color")
         );
+        const hop = x => x?.getAttribute("color") !== color && poss(x);
         const run = x => {
           for (let i = 1; i < 100; i++)
             if (x(i)?.getAttribute("color") === color) break;
@@ -233,11 +234,15 @@
         };
         switch (piece) {
           case "p":
-            // TODO: first move? look through move history
-            // TODO: en passant
-            // TODO: normal capturing
             const c = color == "b" ? 1 : -1;
-            poss(qt(q, r + c));
+            const cap = x => x?.getAttribute("color") && hop(x);
+            const nocap = x => !x?.getAttribute("color") && hop(x);
+            nocap(qt(q, r + c));
+            // TODO: check if first move in move history
+            if (true) nocap(qt(q, r + c + c));
+            cap(qt(q - c, r + c));
+            cap(qt(q + c, r + 0));
+            // TODO: check for en passant in move history
             break;
           case "b":
             run(i => qt(q + 2 * i, r - i));
@@ -270,7 +275,6 @@
             run(i => qt(q - i, r + i));
             break;
           case "n":
-            const hop = x => x?.getAttribute("color") !== color && poss(x);
             hop(qt(q + 1, r + 2));
             hop(qt(q + 1, r - 3));
             hop(qt(q + 2, r + 1));
@@ -283,6 +287,20 @@
             hop(qt(q - 2, r - 1));
             hop(qt(q - 3, r + 1));
             hop(qt(q - 3, r + 2));
+            break;
+          case "k":
+            hop(qt(q + 1, r + 1));
+            hop(qt(q - 1, r - 1));
+            hop(qt(q + 1, r - 1));
+            hop(qt(q - 1, r + 1));
+            hop(qt(q + 1, r + 0));
+            hop(qt(q - 1, r + 0));
+            hop(qt(q + 0, r + 1));
+            hop(qt(q + 0, r - 1));
+            hop(qt(q + 2, r - 1));
+            hop(qt(q - 2, r + 1));
+            hop(qt(q + 1, r - 2));
+            hop(qt(q - 1, r + 2));
             break;
         }
       }
