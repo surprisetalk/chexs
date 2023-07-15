@@ -15,13 +15,6 @@ export const sql = pg(
     `postgres://chexs:password1234@localhost:5432/chexs`,
   {
     database: "chexs",
-    // ssl: false,
-    // fetch_types: false,
-    // idle_timeout: 1,
-    // max_lifetime: 60 * 30,
-    // prepare: false,
-    // username: "postgres",
-    // password: "QL6tRqze46pgR5o",
   }
 );
 
