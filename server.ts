@@ -176,6 +176,7 @@ router.post("/game/:game_id", async ctx => {
   }: {
     color: "black" | "white";
     from: { q: number; r: number };
+    // TODO: This doesn't allow for pawn promotion...
     to: { q: number; r: number };
   } = await ctx.request.body({ type: "json" }).value;
   try {
@@ -190,12 +191,15 @@ router.post("/game/:game_id", async ctx => {
         where game_id = ${game_id}
       `;
       const [game] = await sql`
-        select * 
-        from game g left join move m using (game_id)
-        where g.game_id = ${game_id}
+        select g.*
+        from game g
+        where game_id = ${game_id}
         and ${usr_id} = ${sql(`g.${color}_usr_id`)}
-        order by m.created_at desc
-        limit 1
+      `;
+      const moves = await sql`
+        select * from move m 
+        where game_id = ${game_id}
+        order by created_at desc
       `;
       if (!game) throw new Error("Game not found (or wrong color moved).");
       if (game.points) throw new Error("Game is already complete.");
@@ -203,7 +207,7 @@ router.post("/game/:game_id", async ctx => {
       if (from.q === to.q && from.r === to.r)
         throw new Error("You didn't move your piece!");
       const c = color[0].toUpperCase();
-      if (c === (game._piece?.[1] ?? "W"))
+      if (c === (moves?.[0]?._piece?.[1] ?? "W"))
         throw new Error("It's not your turn.");
       const abs = Math.abs;
       if (abs(to.q) > 5 || abs(to.r) > 5 || abs(0 - to.q - to.r) > 5)
@@ -229,7 +233,7 @@ router.post("/game/:game_id", async ctx => {
       console.log(q_, r_, s_);
       switch (p) {
         case "K":
-          if (abs(q_) > 2 || abs(r_) > 2 || abs(q_ + r_) > 1) {
+          if (abs(q_) > 2 || abs(r_) > 2 || abs(s_) > 2) {
             throw new Error("Illegal king move.");
           }
           break;
@@ -260,10 +264,30 @@ router.post("/game/:game_id", async ctx => {
             throw new Error("Illegal bishop move.");
           }
           break;
-        case "P":
-          // TODO: direction based on board[from.q][from.r]?.[1]
-          throw new Error("TODO");
+        case "P": {
+          const a = color == "black" ? 1 : -1;
+          if (!`0:${2 * a} 0:${a} ${-a}:${a} ${a}:0`.includes(`${q_}:${r_}`))
+            throw new Error("Illegal pawn move.");
+          if (q_ === 0 && board[to.q][to.r])
+            throw new Error("Illegal pawn move.");
+          if (q_ !== 0 && c === (board[to.q][to.r]?.[1] ?? c))
+            throw new Error("Illegal pawn move.");
+          if (
+            r_ === 2 * a &&
+            !"-1:-1 -1:2 -2:-1 -2:3 -3:-1 -3:4 -4:-1 0:-1 0:1 1:-2 1:1 2:-3 2:1 3:-4 3:1 4:-5 4:1".includes(
+              `${from.q}:${from.r}`
+            ) &&
+            !moves.some(
+              move =>
+                (move.piece_from_q === from.q &&
+                  move.piece_from_r === from.r) ||
+                (move.piece_to_q === from.q && move.piece_to_r === from.r)
+            )
+          )
+            throw new Error("Illegal pawn move.");
+          // TODO: check for en passant in move history
           break;
+        }
         default:
           ctx.response.status = 400;
           throw new Error(`Unknown piece: ${p}.`);
