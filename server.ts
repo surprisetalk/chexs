@@ -196,7 +196,7 @@ router.post("/game/:game_id", async ctx => {
         order by m.created_at desc
         limit 1
       `;
-      if (!game) throw new Error("Game not found.");
+      if (!game) throw new Error("Game not found (or wrong color moved).");
       if (!from && !to) return;
       const p = game._board.filter(x =>
         x.endsWith(

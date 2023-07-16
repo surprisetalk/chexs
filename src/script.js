@@ -87,7 +87,6 @@ function highlight(x) {
       const nocap = x => !x?.getAttribute("color") && hop(x);
       nocap(qt(q, r + c));
       // TODO: check if first move in move history
-      // TODO: make sure we're not hopping over an enemy
       if (true && !qt(q, r + c)?.getAttribute("color")) nocap(qt(q, r + c + c));
       cap(qt(q - c, r + c));
       cap(qt(q + c, r + 0));
