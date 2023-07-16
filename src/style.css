@@ -66,6 +66,7 @@ small,
 
 h3 span {
   color: #aaa;
+  font-family: monospace;
 }
 
 .logged-in,
