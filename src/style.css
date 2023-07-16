@@ -177,6 +177,7 @@ li {
 }
 
 #board {
+  margin: 0 auto;
   position: relative;
   --w: 50px;
   --h: calc(var(--w) / 1.1547);
@@ -186,16 +187,20 @@ li {
 
 @media (max-width: 36rem) {
   #board {
-    scale: 0.75;
-    width: 20rem;
-    height: 30rem;
-    margin: 0;
+    scale: 0.65;
+    transform: translate(-6.75rem);
+    width: 18rem;
+    height: 10rem;
     margin-top: -2rem;
     margin-bottom: 4rem;
   }
   #account,
   #games {
     grid-template-columns: 1fr;
+  }
+  header a {
+    font-size: 75%;
+    white-space: nowrap;
   }
 }
 
