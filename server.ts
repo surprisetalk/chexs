@@ -95,10 +95,9 @@ router.get("/game", async ctx => {
   const usr_id = (await ctx.cookies.get("usr_id")) ?? null;
   const [lobby, active, recent, personal] = await Promise.all([
     sql`select * from game where game_id is not null and is_public is true and (white_usr_id is null or black_usr_id is null) order by created_at desc limit 100`,
-    // TODO: prioritize recent games by last moved
-    sql`select * from game where game_id is not null and is_public is true and white_usr_id is not null and black_usr_id is not null and points is null and now() - created_at < interval '1 day' order by created_at desc limit 100`,
-    [], // sql`select * from game where game_id is not null and is_public is true and points is not null order by created_at desc limit 100`,
-    sql`select * from game where game_id is not null and white_usr_id = ${usr_id} or black_usr_id = ${usr_id} order by created_at desc limit 100`,
+    sql`select * from game where game_id is not null and is_public is true and now() - created_at < interval '2 days' order by updated_at desc limit 100`,
+    sql`select * from game where game_id is not null and is_public is true and now() - created_at < interval '2 days' order by created_at desc limit 100`,
+    sql`select * from game where game_id is not null and white_usr_id = ${usr_id} or black_usr_id = ${usr_id} and now() - created_at < interval '7 days' order by created_at desc limit 100`,
   ]);
   ctx.response.body = { lobby, active, recent, personal };
   ctx.response.status = 200;
