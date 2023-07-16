@@ -283,6 +283,11 @@ router.post("/game/:game_id", async ctx => {
 export const app = new Application();
 
 app.use(async (context, next) => {
+  console.log(context.request.url.pathname);
+  await next();
+});
+
+app.use(async (context, next) => {
   try {
     await context.send({
       root: `${Deno.cwd()}/dist`,
@@ -304,5 +309,3 @@ app.listen({
   hostname: "0.0.0.0",
   port: parseInt(Deno.env.get(`PORT`) ?? ``) || 8666,
 });
-
-console.log(`Listening on port ${Deno.env.get(`PORT`) ?? ``}!`);
