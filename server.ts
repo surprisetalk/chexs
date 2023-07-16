@@ -230,7 +230,7 @@ router.post("/game/:game_id", async ctx => {
       switch (p) {
         case "K":
           if (abs(q_) > 2 || abs(r_) > 2 || abs(q_ + r_) > 1) {
-            throw new Error("Invalid king move.");
+            throw new Error("Illegal king move.");
           }
           break;
         case "Q":
@@ -239,11 +239,11 @@ router.post("/game/:game_id", async ctx => {
             abs(r_) !== abs(s_) &&
             !(q_ === r_ || 2 * abs(q_) === abs(r_) || 2 * abs(r_) === abs(q_))
           ) {
-            throw new Error("Invalid queen move.");
+            throw new Error("Illegal queen move.");
           }
           break;
         case "R":
-          if (q_ && abs(r_) !== abs(s_)) throw new Error("Invalid rook move.");
+          if (q_ && abs(r_) !== abs(s_)) throw new Error("Illegal rook move.");
           break;
         case "N":
           if (
@@ -251,13 +251,13 @@ router.post("/game/:game_id", async ctx => {
               `${q_}:${r_}`
             )
           )
-            throw new Error("Invalid knight move");
+            throw new Error("Illegal knight move");
           break;
         case "B":
           if (
             !(q_ === r_ || 2 * abs(q_) === abs(r_) || 2 * abs(r_) === abs(q_))
           ) {
-            throw new Error("Invalid bishop move.");
+            throw new Error("Illegal bishop move.");
           }
           break;
         case "P":
