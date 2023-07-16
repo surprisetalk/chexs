@@ -304,3 +304,5 @@ app.listen({
   hostname: "0.0.0.0",
   port: parseInt(Deno.env.get(`PORT`) ?? ``) || 8666,
 });
+
+console.log(`Listening on port ${Deno.env.get(`PORT`) ?? ``}!`);
