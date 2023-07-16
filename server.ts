@@ -165,7 +165,7 @@ router.get("/game/:game_id", async ctx => {
   ctx.response.status = game ? 200 : 404;
 });
 
-// TODO: resign game by moving your king to XX. or maybe infinity?
+// TODO: resign game by moving your king to **. or maybe infinity?
 router.post("/game/:game_id", async ctx => {
   const game_id = ctx.params.game_id;
   const usr_id = (await ctx.cookies.get("usr_id")) ?? null;
@@ -189,11 +189,14 @@ router.post("/game/:game_id", async ctx => {
         where game_id = ${game_id}
       `;
       const [game] = await sql`
-        select * from game 
-        where game_id = ${game_id}
-        and ${usr_id} = ${sql(`${color}_usr_id`)}
+        select * 
+        from game g left join move m using (game_id)
+        where g.game_id = ${game_id}
+        and ${usr_id} = ${sql(`g.${color}_usr_id`)}
+        order by m.created_at desc
+        limit 1
       `;
-      if (!game) throw new Error("404");
+      if (!game) throw new Error("Game not found.");
       if (!from && !to) return;
       const p = game._board.filter(x =>
         x.endsWith(
@@ -204,6 +207,8 @@ router.post("/game/:game_id", async ctx => {
         )
       )?.[0]?.[0];
       const _piece = (p + color[0]).toUpperCase();
+      if (_piece[1] === (game._piece?.[1] ?? "W"))
+        throw new Error("It's not your turn.");
       const from_ = [
         _piece,
         from.q.toString().padStart(2, "+"),
@@ -216,12 +221,13 @@ router.post("/game/:game_id", async ctx => {
       ].join(":");
       const cap_ =
         game._board.filter(x => x.endsWith(to_.slice(2)))?.[0] ?? null;
-      // TODO: throw 400 if piece doesn't exist
+      if (!game._board.includes(from_))
+        throw new Error("Trying to move piece that doesn't exist.");
+      const q_ = to.q - from.q;
+      const r_ = to.r - from.r;
+      const abs = Math.abs;
       // TODO: throw 400 if out-of-bounds
       // TODO: end game if checkmate or stalemate
-      // const q_ = to.q - from.q;
-      // const r_ = to.r - from.r;
-      // const abs = Math.abs;
       // TODO: Validate all moves (and captures) by piece.
       // switch (p) {
       //   case "K":
@@ -274,7 +280,7 @@ router.post("/game/:game_id", async ctx => {
     ctx.response.status = 204;
   } catch (e) {
     console.error(e);
-    ctx.response.status = parseInt(e) || 500;
+    ctx.response.status = 500;
   }
 });
 
