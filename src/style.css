@@ -223,6 +223,9 @@ li {
     font-size: 75%;
     white-space: nowrap;
   }
+  #about > div {
+    padding: 1rem 2rem 4rem;
+  }
 }
 
 .tile {
