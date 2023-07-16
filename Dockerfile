@@ -24,7 +24,5 @@ WORKDIR /deno-dir
 COPY . .
 RUN ./build.sh
 
-RUN ls dist && exit 1
-
 ENTRYPOINT ["/bin/deno"]
 CMD ["run", "--allow-net", "https://deno.land/std/examples/echo_server.ts"]
