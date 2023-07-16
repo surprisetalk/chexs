@@ -238,7 +238,7 @@ async function games() {
         if (!glist[x]?.length) continue;
         games.insertAdjacentHTML(
           "beforeend",
-          `<div><h3>${x}</h3>${ulli(glist[x].map(game))}</div>`
+          `<div><h3><span>♟</span> ${x}</h3>${ulli(glist[x].map(game))}</div>`
         );
       }
     });
