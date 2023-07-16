@@ -126,7 +126,7 @@ header nav a {
 }
 
 main > div {
-  padding: 3rem 1rem 4rem;
+  padding: 3rem 3rem 6rem;
 }
 
 main > div,
@@ -152,6 +152,10 @@ li {
 #account {
   display: grid;
   grid-template-columns: 1fr 1fr;
+}
+
+#game {
+  text-align: center;
 }
 
 #games {
