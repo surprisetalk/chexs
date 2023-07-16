@@ -66,6 +66,7 @@ async function join(game_id) {
   game();
 }
 
+let moves = [];
 function highlight(x) {
   if (qs(".selected")) return;
   for (const a of qsa(".tile.possible")) a.classList.remove("possible");
@@ -86,11 +87,38 @@ function highlight(x) {
       const cap = x => x?.getAttribute("color") && hop(x);
       const nocap = x => !x?.getAttribute("color") && hop(x);
       nocap(qt(q, r + c));
-      // TODO: check if first move in move history
-      if (true && !qt(q, r + c)?.getAttribute("color")) nocap(qt(q, r + c + c));
+      if (
+        [
+          "-1:-1",
+          "-1:2",
+          "-2:-1",
+          "-2:3",
+          "-3:-1",
+          "-3:4",
+          "-4:-1",
+          "0:-1",
+          "0:1",
+          "1:-2",
+          "1:1",
+          "2:-3",
+          "2:1",
+          "3:-4",
+          "3:1",
+          "4:-5",
+          "4:1",
+        ].includes(`${q}:${r}`) &&
+        !moves.some(
+          move =>
+            (move.piece_from_q === q && move.piece_from_r === r) ||
+            (move.piece_to_q === q && move.piece_to_r === r)
+        ) &&
+        !qt(q, r + c)?.getAttribute("color")
+      )
+        nocap(qt(q, r + c + c));
       cap(qt(q - c, r + c));
       cap(qt(q + c, r + 0));
       // TODO: check for en passant in move history
+      // TODO: allow pawn promotion
       break;
     }
     case "b":
@@ -219,6 +247,7 @@ function game() {
           .querySelector(`[q="${q}"][r="${r}"]`)
           .setAttribute("color", p[1].toLowerCase());
       }
+      moves = game.moves;
     }
   });
 }

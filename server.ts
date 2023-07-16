@@ -182,7 +182,8 @@ router.post("/game/:game_id", async ctx => {
     await sql.begin(async sql => {
       await sql`
         update game set 
-          white_usr_id = coalesce(white_usr_id, ${usr_id})
+          updated_at = now()
+        , white_usr_id = coalesce(white_usr_id, ${usr_id})
         , black_usr_id = coalesce(black_usr_id, ${usr_id})
         , _white_username = coalesce(_white_username, (select username from usr where usr_id = ${usr_id}))
         , _black_username = coalesce(_black_username, (select username from usr where usr_id = ${usr_id}))
@@ -197,69 +198,83 @@ router.post("/game/:game_id", async ctx => {
         limit 1
       `;
       if (!game) throw new Error("Game not found (or wrong color moved).");
-      if (!from && !to) return;
-      const p = game._board.filter(x =>
-        x.endsWith(
-          [
-            from.q.toString().padStart(2, "+"),
-            from.r.toString().padStart(2, "+"),
-          ].join(":")
-        )
-      )?.[0]?.[0];
-      const _piece = (p + color[0]).toUpperCase();
-      if (_piece[1] === (game._piece?.[1] ?? "W"))
+      if (game.points) throw new Error("Game is already complete.");
+      if (!from || !to) return;
+      if (from.q === to.q && from.r === to.r)
+        throw new Error("You didn't move your piece!");
+      const c = color[0].toUpperCase();
+      if (c === (game._piece?.[1] ?? "W"))
         throw new Error("It's not your turn.");
-      const from_ = [
-        _piece,
-        from.q.toString().padStart(2, "+"),
-        from.r.toString().padStart(2, "+"),
-      ].join(":");
-      const to_ = [
-        _piece,
-        to.q.toString().padStart(2, "+"),
-        to.r.toString().padStart(2, "+"),
-      ].join(":");
-      const cap_ =
-        game._board.filter(x => x.endsWith(to_.slice(2)))?.[0] ?? null;
-      if (!game._board.includes(from_))
-        throw new Error("Trying to move piece that doesn't exist.");
+      const abs = Math.abs;
+      if (abs(to.q) > 5 || abs(to.r) > 5 || abs(0 - to.q - to.r) > 5)
+        throw new Error("Out-of-bounds!");
+      const board: Record<number, Record<number, string | null>> = {};
+      for (const q of [-5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5])
+        for (const r of [-5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5])
+          board[q] = { ...board[q], [r]: null };
+      for (const m of game._board) {
+        const [p, q, r] = m.split(":");
+        board[parseInt(q)][parseInt(r)] = p;
+      }
+      const p = board[from.q][from.r]?.[0];
+      if (!p) throw new Error("Trying to move a piece that doesn't exist.");
+      if (c === board[to.q][to.r])
+        throw new Error("You can't capture your own piece!");
       const q_ = to.q - from.q;
       const r_ = to.r - from.r;
-      const abs = Math.abs;
-      // TODO: throw 400 if out-of-bounds
-      // TODO: end game if checkmate or stalemate
-      // TODO: Validate all moves (and captures) by piece.
-      // switch (p) {
-      //   case "K":
-      //     if (abs(q_) > 2 || abs(r_) > 2 || abs(q_ + r_) > 1) {
-      //       throw new Error("400");
-      //     }
-      //     break;
-      //   case "Q":
-      //     throw new Error("TODO");
-      //     break;
-      //   case "R":
-      //     throw new Error("TODO");
-      //     break;
-      //   case "N":
-      //     throw new Error("TODO");
-      //     break;
-      //   case "B":
-      //     if (
-      //       !(q_ === r_ || 2 * abs(q_) === abs(r_) || 2 * abs(r_) === abs(q_))
-      //     ) {
-      //       throw new Error("400");
-      //     }
-      //     throw new Error("TODO");
-      //     break;
-      //   case "P":
-      //     // TODO: direction based on board[from.q][from.r]?.[1]
-      //     throw new Error("TODO");
-      //     break;
-      //   default:
-      //     ctx.response.status = 400;
-      //     throw new Error("TODO");
-      // }
+      const s_ = 0 - from.q - from.r - (0 - from.q - to.r);
+      if (["Q", "R", "B"].includes(p)) {
+        // TODO: throw new Error(`Cannot hop over piece at (${from.q},${r}).`);
+      }
+      console.log(q_, r_, s_);
+      switch (p) {
+        case "K":
+          if (abs(q_) > 2 || abs(r_) > 2 || abs(q_ + r_) > 1) {
+            throw new Error("Invalid king move.");
+          }
+          break;
+        case "Q":
+          if (
+            q_ &&
+            abs(r_) !== abs(s_) &&
+            !(q_ === r_ || 2 * abs(q_) === abs(r_) || 2 * abs(r_) === abs(q_))
+          ) {
+            throw new Error("Invalid queen move.");
+          }
+          break;
+        case "R":
+          if (q_ && abs(r_) !== abs(s_)) throw new Error("Invalid rook move.");
+          break;
+        case "N":
+          if (
+            !"1:2 1:-3 2:1 2:-3 3:-1 3:-2 -1:3 -1:-2 -2:3 -2:-1 -3:1 -3:2".includes(
+              `${q_}:${r_}`
+            )
+          )
+            throw new Error("Invalid knight move");
+          break;
+        case "B":
+          if (
+            !(q_ === r_ || 2 * abs(q_) === abs(r_) || 2 * abs(r_) === abs(q_))
+          ) {
+            throw new Error("Invalid bishop move.");
+          }
+          break;
+        case "P":
+          // TODO: direction based on board[from.q][from.r]?.[1]
+          throw new Error("TODO");
+          break;
+        default:
+          ctx.response.status = 400;
+          throw new Error(`Unknown piece: ${p}.`);
+      }
+      const _piece = p + c;
+      const tid = (p, q, r) =>
+        [p, `${q}`.padStart(2, "+"), `${r}`.padStart(2, "+")].join(":");
+      const from_ = tid(_piece, from.q, from.r);
+      const to_ = tid(_piece, to.q, to.r);
+      const cap_ = tid(board[to.q][to.r] ?? "XX", to.q, to.r);
+      // TODO: end game (set move.points = 3/4 or 1) if checkmate or stalemate or king captured
       const move = {
         game_id,
         _piece,
@@ -268,11 +283,11 @@ router.post("/game/:game_id", async ctx => {
         piece_to_q: to.q,
         piece_to_r: to.r,
       };
-      console.log({ from_, cap_, to_, ...move });
       await sql`
         with move_ as (insert into move ${sql(move)})
         update game 
         set _board = array_remove(array_remove(_board, ${from_}), ${cap_}) || ${to_}::text
+          , updated_at = now()
         where game_id = ${game_id};
       `;
     });
