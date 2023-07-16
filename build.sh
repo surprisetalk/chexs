@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 mkdir -p dist
 for f_ in src/* ; do
