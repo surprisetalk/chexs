@@ -194,7 +194,7 @@ async function move() {
       });
     selected.classList.remove("selected");
     for (const b of qsa(".tile.possible")) b.classList.remove("possible");
-    await game();
+    game();
   } else {
     highlight(this);
     this.classList.add("selected");
@@ -247,7 +247,7 @@ function game() {
           .querySelector(`[q="${q}"][r="${r}"]`)
           .setAttribute("color", p[1].toLowerCase());
       }
-      moves = game.moves;
+      moves = game.moves ?? [];
     }
   });
 }
