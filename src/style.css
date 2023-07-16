@@ -1,11 +1,13 @@
+@import url("https://fonts.googleapis.com/css2?family=Rubik:wght@400;700&display=swap");
+
 html * {
   box-sizing: border-box;
 }
 
 body {
-  font-family: system-ui, -apple-system, "Helvetica Neue", sans-serif;
+  font-family: "Rubik", system-ui, -apple-system, "Helvetica Neue", sans-serif;
   margin: 0;
-  min-height: 100vh;
+  color: white;
 }
 
 .logged-in,
@@ -13,10 +15,30 @@ body {
   display: none;
 }
 
+#logo {
+  font-weight: 700;
+  font-size: 1.4rem;
+  color: white;
+}
+
+a:link,
+a:visited {
+  color: white;
+  text-decoration: none;
+}
+
+a:hover {
+  opacity: 0.6;
+}
+
 body,
-header,
-footer {
-  background-color: #eee;
+header {
+  background-color: #444;
+}
+
+main {
+  background-color: #151515;
+  min-height: 100vh;
 }
 
 header > div,
@@ -24,6 +46,7 @@ footer > div {
   gap: 1rem;
   margin: 0;
   padding: 1rem;
+  align-items: baseline;
 }
 
 header > div {
@@ -34,10 +57,6 @@ header > div {
 header nav {
   display: flex;
   gap: 1rem;
-}
-
-main {
-  background-color: white;
 }
 
 main > div {
@@ -110,13 +129,13 @@ ul {
 }
 
 .c0 {
-  background: #ccc;
+  background: #aaa;
 }
 .c1 {
   background: #666;
 }
 .c2 {
-  background: #aaa;
+  background: #888;
 }
 
 [piece="p"]::after {
@@ -141,12 +160,12 @@ ul {
   color: black;
 }
 [color="w"] {
-  color: white;
+  color: #eee;
 }
 
 .possible {
   background: darkorange;
 }
 .selected {
-  background: olive;
+  background: gold;
 }
