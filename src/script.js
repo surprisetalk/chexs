@@ -88,7 +88,7 @@ function highlight(x) {
       nocap(qt(q, r + c));
       // TODO: check if first move in move history
       // TODO: make sure we're not hopping over an enemy
-      if (true) nocap(qt(q, r + c + c));
+      if (true && !qt(q, r + c)?.getAttribute("color")) nocap(qt(q, r + c + c));
       cap(qt(q - c, r + c));
       cap(qt(q + c, r + 0));
       // TODO: check for en passant in move history
