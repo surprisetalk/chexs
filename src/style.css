@@ -200,6 +200,7 @@ li {
 }
 
 .tile {
+  font-family: monospace;
   position: absolute;
   text-align: center;
   font-size: 2.5rem;
