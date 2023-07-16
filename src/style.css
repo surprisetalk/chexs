@@ -41,6 +41,10 @@ h2 {
 
 h3 {
   font-size: 1.728rem;
+  text-decoration-line: underline;
+  text-decoration-color: #aaa;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
 }
 
 h4 {
@@ -98,7 +102,7 @@ footer > div {
   gap: 1rem;
   margin: 0;
   padding: 1rem;
-  align-items: center;
+  align-items: baseline;
 }
 
 header > div {
@@ -109,6 +113,11 @@ header > div {
 header nav {
   display: flex;
   gap: 1rem;
+}
+
+header nav button,
+header nav a {
+  font-weight: 500;
 }
 
 main > div {
