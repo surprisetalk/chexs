@@ -6,6 +6,7 @@ FROM ${BIN_IMAGE} AS bin
 
 FROM frolvlad/alpine-glibc:alpine-3.13
 
+RUN apk --no-cache add bash
 RUN apk --no-cache add ca-certificates
 
 RUN addgroup --gid 1000 deno \
