@@ -22,7 +22,8 @@ COPY --from=bin /deno /bin/deno
 
 WORKDIR /deno-dir
 COPY . .
-RUN ./build.sh && chown deno:deno /dist/
+
+RUN ./build.sh
 
 ENTRYPOINT ["/bin/deno"]
 CMD ["run", "--allow-net", "https://deno.land/std/examples/echo_server.ts"]

@@ -1,5 +1,7 @@
 #!/bin/sh
 
+set -e
+
 mkdir -p dist
 for f_ in src/* ; do
   f=`basename $f_`
