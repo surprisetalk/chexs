@@ -27,11 +27,12 @@ async function checkUser() {
   } catch (_) {}
   for (const x of qsa(".logged-in")) x.style.display = usr ? "block" : "none";
   for (const x of qsa(".logged-out")) x.style.display = usr ? "none" : "block";
+  return usr;
 }
 
 async function logout() {
   await post("/logout");
-  await checkUser();
+  if (!(await checkUser())) window.location.replace(`/index.html`);
 }
 
 async function login() {
@@ -40,6 +41,7 @@ async function login() {
     password: qs("#login [name=password]").value,
   });
   await checkUser();
+  if (await checkUser()) window.location.replace(`/index.html`);
 }
 
 async function signup() {
@@ -49,6 +51,7 @@ async function signup() {
     password: qs("#signup [name=password]").value,
   });
   await checkUser();
+  if (await checkUser()) window.location.replace(`/index.html`);
 }
 
 async function start() {
