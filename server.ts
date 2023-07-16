@@ -283,11 +283,6 @@ router.post("/game/:game_id", async ctx => {
 export const app = new Application();
 
 app.use(async (context, next) => {
-  console.log(context.request.url.pathname);
-  await next();
-});
-
-app.use(async (context, next) => {
   try {
     await context.send({
       root: `${Deno.cwd()}/dist`,
